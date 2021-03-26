@@ -3,15 +3,12 @@ import networkx as nx
 import sys, os
 sys.path.insert(0, os.path.abspath('..'))
 
+import tests.expectedResults as er
 from src.tools.GraphTools import *
 
-G1 = nx.Graph()
-G2 = nx.Graph()
-G3 = nx.Graph()
 
-G1.add_edges_from([(0, 1), (0, 2), (1, 4), (2, 3), (2, 4)])
-G1_P3 = [[2, 0, 1], [2, 4, 1], [3, 2, 4], [3, 2, 0], [0, 2, 4], [0, 1, 4]]
-P3, _ = find_all_P3(G1)
+
+
 
 def assertListofList(l1, l2):
 	'''
@@ -26,23 +23,28 @@ class TestPathTools(unittest.TestCase):
 
 
 	def test_find_all_P3(self):
-		P3, _ = find_all_P3(G1)
-		self.assertTrue(assertListofList(P3, G1_P3))
-	
-
-	def test_merge_regions(self):
+		#P3, _ = find_all_P3(er.G1)
+		#self.assertTrue(assertListofList(P3, er.G1_P3))
 		pass
 
-	def test_merge_regions_lite(self):
-		pass
-		
+	def test_P3_regions(self):
+		P3s, _ = find_all_P3(er.G2, get_triples=True)
+		regions, amounts = P3_regions(P3s)
 
-	def test_overlapping_P3_amount(self):
-		pass
-
+		self.assertCountEqual(regions, er.G2_P3_regions, msg="The regions are incorrect!")
+		self.assertCountEqual(amounts, er.G2_P3_region_amounts, msg="The count per regions is incorrect!")
 
 	def test_P3_distance(self):
 		pass
+		
+
+	def test_regions_distance(self):
+		P3s, _ = find_all_P3(er.G2, get_triples=True)
+		regions, amounts = P3_regions(P3s)
+
+		distances = regions_distance(er.G2, regions)
+		self.assertCountEqual(distances, er.G2_region_distances, msg="The distance between each region is incorrect!")
+
 
 	def test_P3_distance_matrix(self):
 		pass

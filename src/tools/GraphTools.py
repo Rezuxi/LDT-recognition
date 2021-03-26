@@ -4,7 +4,8 @@ import asymmetree.cograph as cg
 from asymmetree.tools.GraphTools import disturb_graph
 import random
 import copy
-
+import itertools
+#from itertools import permutations 
 
 #####################################################################################
 #																					#
@@ -116,9 +117,9 @@ def P3_regions(l, a = 1):
 		value is the number of P3s in that region.
 	'''
 	regions = []
-	amounts = {}
-	curr_key = 0
-	curr_value = 0
+	amounts = []
+	#curr_key = 0
+	curr_value = 1
 	while len(l) > 0:
 		head, *tail = l
 		head = set(head)
@@ -135,11 +136,13 @@ def P3_regions(l, a = 1):
 				else:
 					rest.append(t)
 			tail = rest
-		regions.append(first)
-		amounts[curr_key] = curr_value
-		curr_key += 1
-		curr_value = 0
+		regions.append(head)
+		amounts.append(curr_value)
+		#curr_key += 1
+		curr_value = 1
 		l = tail
+	#print(regions)
+	#print(amounts)
 	return regions, amounts
 
 '''
@@ -203,18 +206,50 @@ def P3_distance(lengths, p1, p2):
 			min_dist = min_value
 	return min_dist
 
-			
-
-def regions_distance(G, regions):
-	pass
 
 
-
-def P3_distance_matrix(G):
+def unique_combinations(*l):
 	'''
+		get all combinations from the lists in l of length n.
+	'''
+	for c in itertools.combinations(l, 2):
+		for pair in itertools.product(*c):
+			yield pair
+
+def regions_distance(G, regions, lengths=None):
+	'''
+		regions is a list of sets containing nodes. each set is its own region.
+		G is the graph containing the nodes in the regions.
+
+		return
+			dictionary with key mapping to the index of the region in the regions list, the value of which is
+			a dictionary with keys mapping to the index of other regions the value of which is the min distance 
+			between the regions.
+	'''
+	if not lengths:
+		lengths = dict(nx.all_pairs_shortest_path_length(G))
+	combinations = unique_combinations()
+	
+	region_distances = {}
+
+	k = len(regions)
+	for i in range(k):
+		for j in range(i+1, k):
+			min_dist = float('inf')
+			combinations = unique_combinations(regions[i], regions[j])
+			for c in combinations:
+				if lengths[c[0]][c[1]] < min_dist:
+					min_dist = lengths[c[0]][c[1]]
+			region_distances[i] = {j : min_dist}
+	return region_distances 
+
+
+'''
+def P3_distance_matrix(G):
+	"""
 		each row is a P3 at index i
 		each entry is the distance from P3 at index i to the P3 at index j (the column) 
-	'''
+	"""
 	# get all P3
 	P3, _ = find_all_P3(G)
 	k = len(P3)
@@ -227,7 +262,7 @@ def P3_distance_matrix(G):
 			m[i][j] = P3_distance(lengths, P3[i], P3[j])
 	return m
 
-
+'''
 #####################################################################################
 #																					#
 #						   		Graph Editing tools									#
@@ -267,19 +302,50 @@ class InvestigateGraph:
 		'''
 		self._G = G
 		self._G_perturbed = None
+
 		self._is_cograph = True
 		self._is_compatible = True
 
-		self._cographEdit_to_LDT = 0
-		self._triplesEdit_to_LDT = 0
+		'''
+			Count the P3s and regions of the graphs that are/become LDT-graphs and compare them to
+			non LDT-graphs. See if there is anything standing out.
+		'''
+
+		# count how many times any of the edits results in an LDT-graph.
+		self._count_cographEdit_to_LDT = 0
+		self._count_triplesEdit_to_LDT = 0
 		
-		self._triplesEdit_broke_cograph = 0
-		self._cographEdit_broke_compatibility = 0
-		self._triplesEdit_fixed_cograph = 0
-		self._cographEdit_fixed_triples = 0
+		# count how many times a graph went from being consistent to inconsistent by doing cograph editing
+		# and the same for triple editing		
+		self._count_triplesEdit_broke_cograph = 0
+		self._count_cographEdit_broke_consistency = 0
+
+		# count how many times a graph went from broken consistency to fixed by doing cograph editing
+		# and the same for triple editing
+		self._count_triplesEdit_fixed_cograph = 0
+		self._count_cographEdit_fixed_consistency = 0
+
+		# count how many times the disturbed graph is not a cograph and not consistent
+		# so that we can compare the success rate of each heuristic.
+		self._count_dG_not_cograph = 0
+		self._count_dG_not_consistent = 0
+		
+		# count how many times the disturbed graph remains a cograph or consistent so that 
+		# we can compare the frequency at which each heuristic breaks the other property of 
+		# LDT-graphs. i.e. cograph editing breaking consistency and vice versa.
+		self._count_dG_cograph = 0
+		self._count_dG_consistent = 0
+
+		self._count_dG_notCograph_notConsistent = 0
+		self._count_dG_cograph_notConsistent = 0
+		self._count_dG_notCograph_cosistent = 0
+
 
 	def perturb_graph(self, i_rate = None, d_rate = None):
-		# by default have random values for deletion/insertion rate
+		'''
+			perturbs a graph until it is not an LDT-graph
+			by default random values for deletion/insertion rate
+		'''
 		if i_rate == None:
 			i_rate = round(random.random(), 1)
 		if d_rate == None:
@@ -306,7 +372,8 @@ class InvestigateGraph:
 	def triples_editing(self):
 		copy_G = self._G_perturbed.copy()
 		#copy_G = copy.deepcopy(self.disturbed_G)
-		triples, leaves = find_all_P3(copy_G, get_triples=True, colored=self._G)
+		# copy_G is colored (?) so dont need to pass in a different colored graph here
+		triples, leaves = find_all_P3(copy_G, get_triples=True)
 		
 		if len(triples) == 0:
 			print("The set of triples is empty!\n")
@@ -352,6 +419,24 @@ class InvestigateGraph:
 		return edited_G
 
 
+	def print_data(self):
+
+		# check that the variable being divided by is > 0
+		'''
+			Need to count the number of times the perturbed graph is neither a cograph nor "consistent" to properly count the frequency at which they are both "fixed" by each edit heuristic
+			also how many times the perturbed graph is a cograph but not "consistent" and vice versa.
+		'''
+		print("---------------------------Cograph editing data---------------------------")
+		print("\nFrequency of cograph editing turning an arbitrary properly colored graph into an LDT-graph: {}".format(self._count_cographEdit_to_LDT/self._count_dG_not_cograph))
+		print("\nFrequency of cograph editing making the set of triples compatible (LDT): {}".format(self._count_cographEdit_fixed_consistency/self._count_dG_not_cograph))
+		print("\nFrequency of cograph editing making not making the set of triples incompatible (LDT): {}".format(self._count_cographEdit_broke_consistency/))
+
+
+
+
+		print("\n---------------------------Triples editing data---------------------------")
+		print("\nFrequency of triples editing turning the graph into a cograph (LDT): {}".format())
+		print("\nFrequency of triples editing not breaking the cograph (LDT): {}".format())
 
 if __name__ == "__main__":
 	pass
