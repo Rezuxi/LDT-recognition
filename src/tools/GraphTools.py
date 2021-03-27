@@ -1,7 +1,7 @@
 import networkx as nx
 import asymmetree.tools as tools
 import asymmetree.cograph as cg
-from asymmetree.tools.GraphTools import disturb_graph
+from asymmetree.tools.GraphTools import disturb_graph, symmetric_diff
 import random
 import copy
 import itertools
@@ -276,6 +276,11 @@ def is_compatible(G, colored_G = None):
 	else:
 		triples, leaves = find_all_P3(G, get_triples=True)
 
+	# if triples , leaves are empty then it's an LDT graph (if cograph)
+	'''
+	if triples == []:
+		return True
+	'''
 	B = tools.Build(triples, leaves)
 	tree_triples = B.build_tree()
 
@@ -306,6 +311,9 @@ class InvestigateGraph:
 		self._is_cograph = True
 		self._is_compatible = True
 
+		self._triplesEdit_to_LDT = False
+		self._cographEdit_to_LDT = False
+
 		'''
 			Count the P3s and regions of the graphs that are/become LDT-graphs and compare them to
 			non LDT-graphs. See if there is anything standing out.
@@ -325,6 +333,12 @@ class InvestigateGraph:
 		self._count_triplesEdit_fixed_cograph = 0
 		self._count_cographEdit_fixed_consistency = 0
 
+		# count how many times a graph went from broken consistency to fixed by doing cograph editing
+		# and the same for triple editing
+		self._count_triplesEdit_remained_cograph = 0
+		self._count_cographEdit_remained_consistent = 0
+
+
 		# count how many times the disturbed graph is not a cograph and not consistent
 		# so that we can compare the success rate of each heuristic.
 		self._count_dG_not_cograph = 0
@@ -338,7 +352,7 @@ class InvestigateGraph:
 
 		self._count_dG_notCograph_notConsistent = 0
 		self._count_dG_cograph_notConsistent = 0
-		self._count_dG_notCograph_cosistent = 0
+		self._count_dG_notCograph_consistent = 0
 
 
 	def perturb_graph(self, i_rate = None, d_rate = None):
@@ -364,7 +378,7 @@ class InvestigateGraph:
 			self._is_compatible = False
 		# make sure the disturbed graph is not an LDT
 		if self._is_cograph and self._is_compatible:
-			print("adding noise again!")
+			#print("adding noise again!")
 			self.perturb_graph()
 
 
@@ -376,7 +390,7 @@ class InvestigateGraph:
 		triples, leaves = find_all_P3(copy_G, get_triples=True)
 		
 		if len(triples) == 0:
-			print("The set of triples is empty!\n")
+			#print("The set of triples is empty!\n")
 			return None, None
 		# NOTE: If G has less than two nodes an error will occur in the BUILD alg, specifically in stoer_wagner alg.
 
@@ -415,9 +429,21 @@ class InvestigateGraph:
 
 
 	def cograph_editing(self):
-		edited_G = cg.edit_to_cograph(self._G_perturbed)
-		return edited_G
+		return cg.edit_to_cograph(self._G_perturbed)
+		
 
+
+	def print_P3_data(self):
+		pass
+
+	def print_symmetric_diff(self, G):
+		# edit distance between edited graph and perturbed graph
+		edit_dist = symmetric_diff(self._G_perturbed, G)
+		print("The edit distance is: {}".format(edit_dist))
+		
+
+	def print_perturbed_G_data(self):
+		print("The amount of nodes and edges in the perturbed graph is: {}, {}".format(len(self._G_perturbed.nodes()), len(self._G_perturbed.edges())))
 
 	def print_data(self):
 
@@ -426,17 +452,42 @@ class InvestigateGraph:
 			Need to count the number of times the perturbed graph is neither a cograph nor "consistent" to properly count the frequency at which they are both "fixed" by each edit heuristic
 			also how many times the perturbed graph is a cograph but not "consistent" and vice versa.
 		'''
-		print("---------------------------Cograph editing data---------------------------")
-		print("\nFrequency of cograph editing turning an arbitrary properly colored graph into an LDT-graph: {}".format(self._count_cographEdit_to_LDT/self._count_dG_not_cograph))
-		print("\nFrequency of cograph editing making the set of triples compatible (LDT): {}".format(self._count_cographEdit_fixed_consistency/self._count_dG_not_cograph))
-		print("\nFrequency of cograph editing making not making the set of triples incompatible (LDT): {}".format(self._count_cographEdit_broke_consistency/))
+		print("\n\t\t------------------------------------Cograph editing data------------------------------------")
+		if self._count_dG_notCograph_notConsistent > 0:
+			print("\nFrequency of cograph editing making the set of triples compatible (LDT): {}".format(self._count_cographEdit_fixed_consistency/self._count_dG_notCograph_notConsistent))
+		else:
+			print("\nNo perturbed graph ended up not being a cograph and having a non-compatible set of triples.")
+		if self._count_dG_notCograph_consistent > 0:
+			print("\nFrequency of cograph editing not making the set of triples incompatible (LDT): {}".format(self._count_cographEdit_remained_consistent/self._count_dG_notCograph_consistent))
+		else:
+			print("\nNo perturbed graph ended up not being a cograph and having a set of compatible triples.")
+		if self._count_dG_notCograph_consistent > 0:
+			print("\nFrequency of cograph editing making the set of triples incompatible (not LDT): {}".format(self._count_cographEdit_broke_consistency/self._count_dG_notCograph_consistent))
+		if self._count_dG_not_cograph > 0:
+			print("\nFrequency of cograph editing turning an arbitrary properly colored graph into an LDT-graph: {}".format(self._count_cographEdit_to_LDT/self._count_dG_not_cograph))
+		else:
+			print("\nAll perturbed graphs remained cographs.")
+
+		
 
 
 
+		print("\n\t\t------------------------------------Triples editing data------------------------------------")
+		if self._count_dG_notCograph_notConsistent > 0:
+			print("\nFrequency of triples editing turning the graph into a cograph (LDT): {}".format(self._count_triplesEdit_fixed_cograph/self._count_dG_notCograph_notConsistent))
+		if self._count_dG_cograph_notConsistent > 0:
+			print("\nFrequency of triples editing not breaking the cograph (LDT): {}".format(self._count_triplesEdit_remained_cograph/self._count_dG_cograph_notConsistent))
+		if self._count_dG_cograph_notConsistent > 0:
+			print("\nFrequency of triples editing breaking the cograph (not LDT): {}".format(self._count_triplesEdit_broke_cograph/self._count_dG_cograph_notConsistent))
+		if self._count_dG_not_consistent > 0:
+			print("\nFrequency of triples editing turning an arbitrary properly colored graph into an LDT-graph: {}".format(self._count_triplesEdit_to_LDT/self._count_dG_not_consistent))
+		
+		
+		#print("The edit distance (symmetric difference) between the perturbed graph and the triples edited graph is: {}".format())			
+		#print("The edit distance (symmetric difference) between the perturbed graph and the cograph edited graph is: {}".format())
 
-		print("\n---------------------------Triples editing data---------------------------")
-		print("\nFrequency of triples editing turning the graph into a cograph (LDT): {}".format())
-		print("\nFrequency of triples editing not breaking the cograph (LDT): {}".format())
+		print("\nOf 100 perturbed graphs, the amount of times it wasn't a cograph is: {}".format(self._count_dG_not_cograph))
+		print("Of 100 perturbed graphs, the amount of times its set of triples wasn't compatible is: {}".format(self._count_dG_not_consistent))
 
 if __name__ == "__main__":
 	pass
