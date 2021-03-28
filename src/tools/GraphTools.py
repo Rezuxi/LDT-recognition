@@ -172,11 +172,12 @@ def P3_regions_lite(l):
 '''
 
 
-def overlapping_P3_amount(G):
+def overlapping_P3_amount(G, P3 = None):
 	'''
 		returns the number of overlapping P3s in G
 	'''
-	P3, _ = find_all_P3(G)
+	if not P3:
+		P3, _ = find_all_P3(G)
 	k = len(P3)
 	if k == 0:
 		return 0
@@ -228,21 +229,33 @@ def regions_distance(G, regions, lengths=None):
 	'''
 	if not lengths:
 		lengths = dict(nx.all_pairs_shortest_path_length(G))
-	combinations = unique_combinations()
-	
+	#print(lengths)
 	region_distances = {}
 
 	k = len(regions)
 	for i in range(k):
 		for j in range(i+1, k):
 			min_dist = float('inf')
-			combinations = unique_combinations(regions[i], regions[j])
+			combinations = unique_combinations(regions[i], regions[j]) # NOTE: This is supposed to return a generator of 2-tuples, but instead is giving ((x, y, z), w). TODO: fix
+			print(list(combinations))
 			for c in combinations:
 				if lengths[c[0]][c[1]] < min_dist:
 					min_dist = lengths[c[0]][c[1]]
 			region_distances[i] = {j : min_dist}
 	return region_distances 
 
+
+def get_P3_data(G, colored_G=None):
+	if colored_G:
+		P3s = find_all_P3(G, get_triples=True, colored_G=colored_G)
+	else:
+		P3s = find_all_P3(G, get_triples=True)
+
+	amount_of_overlapping_P3 = overlapping_P3_amount(G, P3s)
+	regions, amounts = P3_regions(P3s)
+	regions_distances = regions_distance(G, regions)
+
+	return amount_of_overlapping_P3, regions, regions_distances
 
 '''
 def P3_distance_matrix(G):
@@ -265,7 +278,7 @@ def P3_distance_matrix(G):
 '''
 #####################################################################################
 #																					#
-#						   		Graph Editing tools									#
+#									Graph Editing Tools 							#
 #																					#
 #####################################################################################
 
@@ -284,10 +297,8 @@ def is_compatible(G, colored_G = None):
 	B = tools.Build(triples, leaves)
 	tree_triples = B.build_tree()
 
-	if tree_triples:
-		return True
-	else:
-		return False
+	return True if tree_triples else False
+	
 
 def is_cograph(G):
 	cotree = cg.Cotree.cotree(G)
@@ -382,6 +393,25 @@ class InvestigateGraph:
 			self.perturb_graph()
 
 
+
+
+	def compare_graphs(self):
+		"""
+			compare the P3s of the LDT graph and the perturbed graph
+		"""
+		pass
+
+
+
+
+
+	#########################################################################################################
+	#																										#
+	#										EDITING HEURISTICS												#
+	#																										#
+	#########################################################################################################
+
+
 	# only deletes edges with highest weight for every triple to be removed
 	def triples_editing(self):
 		copy_G = self._G_perturbed.copy()
@@ -433,7 +463,15 @@ class InvestigateGraph:
 		
 
 
+	#########################################################################################################
+	#																										#
+	#											PRINT DATA													#
+	#																										#
+	#########################################################################################################
+
+
 	def print_P3_data(self):
+		
 		pass
 
 	def print_symmetric_diff(self, G):

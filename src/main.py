@@ -1,4 +1,5 @@
 from tools.GraphTools import *
+from tools.plotTools import *
 import networkx as nx
 import asymmetree.treeevolve as te
 from asymmetree.datastructures import PhyloTree
@@ -10,7 +11,10 @@ OGT = te.observable_tree(TGT)
 ldt = ldt_graph(OGT, S)
 
 G = InvestigateGraph(ldt)
-
+a, b, c = get_P3_data(G._G)
+#print("\nAmount of overlapping P3s: {}".format(a))
+#print("\nThe regions of P3s: {}".format(*b))
+#print("\nThe distance between regions: {}\n".format(c))
 def run_investigation():
 	# do n times
 		# load new species and gene tree
@@ -25,9 +29,9 @@ def run_investigation():
 	# this will cause the graph to not be an LDT-graph.
 	# cograph, not consistent or not cograph, consistent or not cograph nor consistent
 
-	for i in range(100):
+	for i in range(5):
 
-		G.perturb_graph(0.5, 0.2)
+		G.perturb_graph()
 
 		'''
 			COGRAPH EDIT
@@ -47,11 +51,12 @@ def run_investigation():
 			if edited_G_is_cograph:
 				
 				edited_G_is_compatible = is_compatible(edited_G, G._G)
-
+				#triples, leaves = find_all_P3(edited_G, get_triples=True, colored_G=G._G)
+				#print("The set of triples for the cograph is: \n{}".format(triples))
 				if edited_G_is_compatible:
 					G._count_cographEdit_to_LDT += 1
-					G.print_perturbed_G_data()
-					G.print_symmetric_diff(edited_G)
+					#G.print_perturbed_G_data()
+					#G.print_symmetric_diff(edited_G)
 
 				if edited_G_is_compatible and G._is_compatible:
 					G._count_cographEdit_remained_consistent += 1
@@ -94,6 +99,7 @@ def run_investigation():
 
 	G.print_data()
 
+	plot_data(G)
 	'''
 		To get the number of times a graph went from not a cograph and consistent to a cograph and still consistent
 		we count (count_cographEdit_to_LDT - count_cographEdit_fixed_consistency)
