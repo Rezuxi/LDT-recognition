@@ -5,7 +5,7 @@ from asymmetree.tools.GraphTools import disturb_graph, symmetric_diff
 import random
 import copy
 import itertools
-#from itertools import permutations 
+
 
 #####################################################################################
 #																					#
@@ -24,7 +24,6 @@ def find_all_P3(G, get_triples=False, colored_G=None):
 	'''
 	leaves = set()
 	triples = []
-	#nodes = None
 
 	if colored_G:
 		nodes = colored_G.nodes()	
@@ -113,9 +112,10 @@ def P3_regions(l, a = 1):
 		a is the minimum number of elements regions need to have in common for them to be
 		considered the same.
 
-		returns a list of sets (regions) and a dictionary where the key is the idx of the region and
-		value is the number of P3s in that region.
+		returns a list of sets (regions) and a list with amount of P3s per region.
+		the idx of the amount list matches the idx of the list of regions.
 	'''
+
 	regions = []
 	amounts = []
 	#curr_key = 0
@@ -123,7 +123,6 @@ def P3_regions(l, a = 1):
 	while len(l) > 0:
 		head, *tail = l
 		head = set(head)
-
 		n = -1
 		while len(head) > n:
 			n = len(head)
@@ -141,8 +140,6 @@ def P3_regions(l, a = 1):
 		#curr_key += 1
 		curr_value = 1
 		l = tail
-	#print(regions)
-	#print(amounts)
 	return regions, amounts
 
 '''
@@ -171,11 +168,11 @@ def P3_regions_lite(l):
 
 '''
 
-
+'''
 def overlapping_P3_amount(G, P3 = None):
-	'''
+	"""
 		returns the number of overlapping P3s in G
-	'''
+	"""
 	if not P3:
 		P3, _ = find_all_P3(G)
 	k = len(P3)
@@ -190,7 +187,7 @@ def overlapping_P3_amount(G, P3 = None):
 				count += 1
 	return count
 
-
+'''
 def P3_distance(lengths, p1, p2):
 	'''
 		returns the min distance between the path p1 and
@@ -227,35 +224,39 @@ def regions_distance(G, regions, lengths=None):
 			a dictionary with keys mapping to the index of other regions the value of which is the min distance 
 			between the regions.
 	'''
+
 	if not lengths:
 		lengths = dict(nx.all_pairs_shortest_path_length(G))
-	#print(lengths)
 	region_distances = {}
-
 	k = len(regions)
 	for i in range(k):
+		region_distances[i] = dict()
 		for j in range(i+1, k):
 			min_dist = float('inf')
-			combinations = unique_combinations(regions[i], regions[j]) # NOTE: This is supposed to return a generator of 2-tuples, but instead is giving ((x, y, z), w). TODO: fix
-			print(list(combinations))
+
+			combinations = unique_combinations(regions[i], regions[j])		
 			for c in combinations:
-				if lengths[c[0]][c[1]] < min_dist:
-					min_dist = lengths[c[0]][c[1]]
-			region_distances[i] = {j : min_dist}
+				# check if keys exist
+				if c[0] in lengths:
+					if c[1] in lengths[c[0]]:
+						if lengths[c[0]][c[1]] < min_dist:
+							min_dist = lengths[c[0]][c[1]]
+			region_distances[i][j] = min_dist
 	return region_distances 
 
 
 def get_P3_data(G, colored_G=None):
 	if colored_G:
-		P3s = find_all_P3(G, get_triples=True, colored_G=colored_G)
+		P3s, _ = find_all_P3(G, get_triples=True, colored_G=colored_G)
 	else:
-		P3s = find_all_P3(G, get_triples=True)
+		P3s, _ = find_all_P3(G, get_triples=True)
 
-	amount_of_overlapping_P3 = overlapping_P3_amount(G, P3s)
+	print("P3s: \n{}".format(P3s))
+	print("length of P3s: {}".format(len(P3s)))
 	regions, amounts = P3_regions(P3s)
 	regions_distances = regions_distance(G, regions)
 
-	return amount_of_overlapping_P3, regions, regions_distances
+	return regions, amounts, regions_distances
 
 '''
 def P3_distance_matrix(G):
