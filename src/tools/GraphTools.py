@@ -308,6 +308,19 @@ def is_cograph(G):
 	return False
 
 
+def is_properly_colored(G, colored_G = None):
+	'''
+		Checks if a graph is properly colored. (no adjacent vertices have the same color)
+	'''
+	if colored_G:
+		nodes = colored_G.nodes()
+	else:
+		nodes = G.nodes()
+
+	for e in G.edges():
+		if nodes[e[0]]['color'] == nodes[e[1]]['color']:
+			return False
+	return True
 
 
 
@@ -330,6 +343,9 @@ class InvestigateGraph:
 			Count the P3s and regions of the graphs that are/become LDT-graphs and compare them to
 			non LDT-graphs. See if there is anything standing out.
 		'''
+
+		# count how many times the perturbed graph remains properly colored after cograph editing and also for triples editing when adding edges
+		self._count_cographEdit_remain_properly_colored = 0
 
 		# count how many times any of the edits results in an LDT-graph.
 		self._count_cographEdit_to_LDT = 0
@@ -459,9 +475,21 @@ class InvestigateGraph:
 		return copy_G, tree_triples
 
 
-	def cograph_editing(self):
-		return cg.edit_to_cograph(self._G_perturbed)
+	def cograph_editing(self, G=None):
+		return cg.edit_to_cograph(G) if G else cg.edit_to_cograph(self._G_perturbed)
 		
+
+	def color_editing(self, G=None):
+		if G:
+			nodes = G.nodes()
+		else:
+			nodes = self._G.nodes()
+		copy_G = self._G.copy()
+		for e in G.edges():
+			if nodes[e[0]]['color'] == nodes[e[1]]['color']:
+				copy_G.remove_edge(e)
+		return copy_G
+
 
 
 	#########################################################################################################
@@ -507,7 +535,7 @@ class InvestigateGraph:
 		else:
 			print("\nAll perturbed graphs remained cographs.")
 
-		
+		#print("The amount of times cograph editing made it not properly colored is: {}".format(100-self._count_cographEdit_remain_properly_colored))
 
 
 

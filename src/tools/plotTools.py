@@ -65,3 +65,6 @@ def plot_data(G):
 	plt.xticks(y_pos, bar_labels)
 
 	plt.show()
+
+def plot_success_data(G):
+	pass

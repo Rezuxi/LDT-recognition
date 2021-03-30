@@ -33,3 +33,52 @@ G2_region_distances = {0: {1: 1, 2: 4}, 1 : {2 : 1}}
 
 G2.add_nodes_from(G2_nodes)
 G2.add_edges_from(G2_edges)
+
+
+
+'''
+
+G2_is_cograph = is_cograph(G2)
+G2_is_compatible = is_compatible(G2)
+G2_is_properly_colored = is_properly_colored(G2)
+
+if G2_is_cograph:
+	print("G2 is a cograph")
+else:
+	print("G2 is not a cograph")
+if G2_is_compatible:
+	print("G2s set of triples is compatible")
+else:
+	print("G2s set of triples is not compatible")	
+if G2_is_properly_colored:
+	print("G2s is properly colored")
+else:
+	print("G2s is not properly colored")	
+
+edited_G = G.cograph_editing(G2)
+G2_is_cograph = is_cograph(edited_G)
+G2_is_compatible = is_compatible(edited_G, G2)
+G2_is_properly_colored = is_properly_colored(edited_G, G2)
+
+
+if G2_is_cograph:
+	print("Edited G2 is a cograph")
+else:
+	print("Edited G2 is not a cograph")
+if G2_is_compatible:
+	print("Edited G2s set of triples is compatible")
+else:
+	print("Edited G2s set of triples is not compatible")
+if G2_is_properly_colored:
+	print("Edited G2s is properly colored")
+else:
+	print("Edited G2s is not properly colored")
+
+print("edges of G: \n{}".format(edited_G.edges()))
+a, b, c = get_P3_data(edited_G, colored_G=G2)
+print("\nThe regions of P3s: {}".format(a))
+print("\nThe amounts in the regions: {}".format(b))
+print("\nThe distance between regions: {}\n".format(c))
+
+
+'''

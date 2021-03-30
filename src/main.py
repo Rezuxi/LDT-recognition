@@ -11,28 +11,18 @@ OGT = te.observable_tree(TGT)
 ldt = ldt_graph(OGT, S)
 
 
-'''
-	test
-'''
-G2 = nx.Graph()
-G2_nodes = [(0, {"color": 0}), (1, {"color": 1}), (2, {"color": 2}), (3, {"color": 1}),
-			(4, {"color": 0}), (5, {"color": 2}), (6, {"color": 2}), (7, {"color": 1}),
-			(8, {"color": 0}), (9, {"color": 2}), (10, {"color": 2}), (11, {"color": 1}),
-			(12, {"color": 2}), (13, {"color": 0}), (14, {"color": 1}), (15, {"color": 0}),
-			(16, {"color": 2})
-			]
-G2_edges = [(0, 1), (0, 2), (1, 4), (2, 3), (2, 4), (4, 5), (4, 6), (4, 7), (5, 7), (6, 7),
-			(7, 8), (7, 9), (3, 10), (10, 11), (11, 12), (11, 13), (13, 14), (14, 15), (15, 16)
-			]
-G2.add_nodes_from(G2_nodes)
-G2.add_edges_from(G2_edges)
 
-G = InvestigateGraph(G2)
-print("edges of G: \n{}".format(G._G.edges()))
-a, b, c = get_P3_data(G._G)
-print("\nThe regions of P3s: {}".format(a))
-print("\nThe amounts in the regions: {}".format(b))
-print("\nThe distance between regions: {}\n".format(c))
+G = InvestigateGraph(ldt)
+#print("edges of G: \n{}".format(G._G.edges()))
+#a, b, c = get_P3_data(G._G)
+#print("\nThe regions of P3s: {}".format(a))
+#print("\nThe amounts in the regions: {}".format(b))
+#print("\nThe distance between regions: {}\n".format(c))
+
+
+
+# edges between the same colored vertices are being inserted when doing cograph editing. This is wrong since it's no longer properly colored
+
 def run_investigation():
 	# do n times
 		# load new species and gene tree
@@ -47,7 +37,7 @@ def run_investigation():
 	# this will cause the graph to not be an LDT-graph.
 	# cograph, not consistent or not cograph, consistent or not cograph nor consistent
 
-	for i in range(5):
+	for i in range(100):
 
 		G.perturb_graph()
 
@@ -65,13 +55,16 @@ def run_investigation():
 
 			edited_G = G.cograph_editing()
 			edited_G_is_cograph = is_cograph(edited_G)
-			
+			edited_G_is_properly_colored = is_properly_colored(edited_G, G._G)
+
 			if edited_G_is_cograph:
 				
+				if edited_G_is_properly_colored:
+					G._count_cographEdit_remain_properly_colored += 1
 				edited_G_is_compatible = is_compatible(edited_G, G._G)
 				#triples, leaves = find_all_P3(edited_G, get_triples=True, colored_G=G._G)
 				#print("The set of triples for the cograph is: \n{}".format(triples))
-				if edited_G_is_compatible:
+				if edited_G_is_compatible and edited_G_is_properly_colored:
 					G._count_cographEdit_to_LDT += 1
 					#G.print_perturbed_G_data()
 					#G.print_symmetric_diff(edited_G)
@@ -139,5 +132,5 @@ def run_investigation():
 
 
 if __name__ == "__main__":
-	#run_investigation()
+	run_investigation()
 	pass
