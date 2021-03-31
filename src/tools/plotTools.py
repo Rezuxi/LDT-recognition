@@ -41,11 +41,14 @@ def visualize_regions(G):
 def plot_data(G):
 
 	"""
-		label should include variables for the TGT
+		label should include variables for the TGT(?)
 
-		Bar plot for both cograph edit (blue) and triples edit (red) on perturbed graphs that are neither
-		cographs nor have consistent set of triples.
 	"""
+
+	# Plots the frequency of cograph editing fixing set of triples and triples editing fixing cograph
+	# frequency of each editing heuristic turns the graph into an LDT-graph (properly colored cograph with a compatible set of triples)
+	#
+
 	if G._count_dG_notCograph_notConsistent > 0:
 		cograph_freq = G._count_cographEdit_fixed_consistency/G._count_dG_notCograph_notConsistent
 	else:
@@ -55,15 +58,39 @@ def plot_data(G):
 	else:
 		triples_freq = 0
 	
+	if G._count_dG_not_cograph > 0:
+		cograph_to_LDT_freq = G._count_cographEdit_to_LDT/G._count_dG_not_cograph
+	else:
+		cograph_to_LDT_freq = 0
+	if G._count_dG_not_consistent > 0:
+		triples_to_LDT_freq = G._count_triplesEdit_to_LDT/G._count_dG_not_consistent
+	else:
+		triples_to_LDT_freq = 0
 
-	height = [cograph_freq, triples_freq]
+
+
+
+	edits_fixing_other = [cograph_freq, triples_freq]
+	edits_to_LDT = [cograph_to_LDT_freq, triples_to_LDT_freq]
 	bar_labels = ["cographEdit", "triplesEdit"]
 	y_pos = np.arange(len(bar_labels))
 
+	#fig, axs = plt.subplots(1, 2)
 
-	plt.bar(y_pos, height, color=['blue', 'red'])
+	plt.title("Frequency of cograph editing making the set of triples compatible and \ntriples editing turning the graph into a cograph")
+	plt.bar(y_pos, edits_fixing_other, color=['blue', 'red'], width=[0.5, 0.5])
 	plt.xticks(y_pos, bar_labels)
+	plt.ylim(0, 1.05)
 
+	#axs[0].bar(y_pos, edits_fixing_other, color=['blue', 'red'])
+	#axs[1].bar(y_pos, edits_to_LDT, color=['blue', 'red'])
+
+
+	plt.show()
+	plt.title("Frequency of cograph/triples editing turning the graph into an LDT-graph")
+	plt.bar(y_pos, edits_to_LDT, color=['blue', 'red'], width=[0.5, 0.5])
+	plt.xticks(y_pos, bar_labels)
+	plt.ylim(0, 1.05)
 	plt.show()
 
 def plot_success_data(G):

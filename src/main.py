@@ -6,7 +6,7 @@ from asymmetree.datastructures import PhyloTree
 from asymmetree.hgt import ldt_graph
 
 S = te.simulate_species_tree(10, model='innovation')
-TGT = te.simulate_dated_gene_tree(S, dupl_rate = 0.5, loss_rate = 0.5, hgt_rate = 0.5, prohibit_extinction = "per_family", replace_prob=0.0)
+TGT = te.simulate_dated_gene_tree(S, dupl_rate = 0.5, loss_rate = 0.3, hgt_rate = 0.6, prohibit_extinction = "per_family", replace_prob=0.0)
 OGT = te.observable_tree(TGT)
 ldt = ldt_graph(OGT, S)
 
@@ -18,24 +18,10 @@ G = InvestigateGraph(ldt)
 #print("\nThe regions of P3s: {}".format(a))
 #print("\nThe amounts in the regions: {}".format(b))
 #print("\nThe distance between regions: {}\n".format(c))
+print("amount of nodes in the ldt graph: {}".format(len(ldt.nodes())))
 
-
-
-# edges between the same colored vertices are being inserted when doing cograph editing. This is wrong since it's no longer properly colored
 
 def run_investigation():
-	# do n times
-		# load new species and gene tree
-		# create LDT graph
-		# save data for this LDT graph
-		# do x times
-			# perturb LDT graph
-			# do cograph edit
-			# do triples edit
-			# save data in some way (perhaps plot)
-		# compare edited graph to LDT graph data
-	# this will cause the graph to not be an LDT-graph.
-	# cograph, not consistent or not cograph, consistent or not cograph nor consistent
 
 	for i in range(100):
 

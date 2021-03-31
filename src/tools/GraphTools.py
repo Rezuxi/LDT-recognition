@@ -142,52 +142,7 @@ def P3_regions(l, a = 1):
 		l = tail
 	return regions, amounts
 
-'''
-def P3_regions_lite(l):
-	"""
-		convert to graph and count components(regions)
-		this method is faster but only applies to the case where 
-		sharing at least 1 node merges the regions.
 
-		returns the "regions" of the P3s in l.
-	"""
-	G = nx.Graph()
-	def to_edges(ls):
-		"""
-			for the P3 (a, b, c) it adds the edges (a, b) and (b, c)
-		"""
-		it = iter(ls)
-		last = next(it)
-		for curr in it:
-			yield last, curr
-			last = curr
-	for n in l:
-		G.add_edges_from(to_edges(n))
-
-	return nx.connected_components(G)
-
-'''
-
-'''
-def overlapping_P3_amount(G, P3 = None):
-	"""
-		returns the number of overlapping P3s in G
-	"""
-	if not P3:
-		P3, _ = find_all_P3(G)
-	k = len(P3)
-	if k == 0:
-		return 0
-
-	count = 0
-
-	for i in range(k):
-		for j in range(i+1, k):
-			if any(item in P3[i] for item in P3[j]):
-				count += 1
-	return count
-
-'''
 def P3_distance(lengths, p1, p2):
 	'''
 		returns the min distance between the path p1 and
