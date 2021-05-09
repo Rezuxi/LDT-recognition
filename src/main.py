@@ -23,14 +23,25 @@ colors = gt.sort_by_colors(ldt)
 #print("\nThe distance between regions: {}\n".format(c))
 
 
+
+
 print("Amount of nodes: {}".format(len(ldt.nodes())))
 print("Amount of colors: {}".format(len(colors)))
-
+print("Amount of edges: {}".format(len(ldt.edges())))
 
 def run_investigation():
+	average_edge = 0
+	m = 100
+	
+	#list_of_Gs = []
+	#global p3_average_triples
+	# while loop til n_values list is full (from 10 -> 25?)
+	# 	n = 10. increment n once we get a graph with n nodes.
+	#n = 10
+	#while len(list_of_Gs) < 15:
 	G = InvestigateGraph(ldt)
-	global p3_average_triples
-	for i in range(10):
+	#if len(ldt.nodes()) == n:
+	for i in range(m):
 
 		G.perturb_graph(0.5, 0.5)
 
@@ -95,9 +106,11 @@ def run_investigation():
 
 			if G._is_cograph:
 				G._count_dG_cograph_notConsistent += 1
-
-			edited_G, _ = G.triples_editing()
-
+			#print("amount of edges in perturbed G: {}".format(len(G._G_perturbed.edges())))
+			#edited_G, _ = G.triples_editing()
+			#edited_G, _ = G.triples_editing(destroy_K3 = 1)
+			edited_G, _ = G.triples_editing2()
+			#print("amount of edges in edited_G: {}".format(len(edited_G.edges())))
 			# in this case, no edit was made since the set of triples was empty. the empty set is a consistent set of triples.
 			if edited_G == None:
 				edited_G_is_compatible = True
@@ -116,6 +129,10 @@ def run_investigation():
 
 
 			if edited_G_is_cograph and edited_G_is_compatible and edited_G_is_properly_colored:
+				if edited_G:
+					average_edge += len(edited_G.edges())
+				else:
+					average_edge += len(G._G_perturbed.edges())
 				G._count_triplesEdit_to_LDT += 1
 
 			
@@ -127,14 +144,61 @@ def run_investigation():
 			elif not edited_G_is_cograph and G._is_cograph:
 				G._count_triplesEdit_broke_cograph += 1
 		
-		G._is_cograph = True
-		G._is_compatible = True
+			G._is_cograph = True
+			G._is_compatible = True
+		#n += 1
+		#list_of_Gs.append(G)
 
-
-
+		# save data in list
 	G.print_data()
 	#plot_data(G)
-	#plot_frequencies(G, len(G._G.nodes()))
+	#plot_frequencies(G, len(G._G.nodes()), m)
+	print("Amount of nodes: {}".format(len(ldt.nodes())))
+	print("Amount of colors: {}".format(len(colors)))
+	print("Amount of edges in the original ldt-graph: {}".format(len(ldt.edges())))
+	if G._count_triplesEdit_to_LDT > 0:
+		print("Average edges remaining in LDT-graphs: {}".format(average_edge/G._count_triplesEdit_to_LDT))
+	#plot_tableBar(list_of_Gs, m)
+
+def ldt_edit():
+	# do cograph edit -> triples edit
+	# check if ldt graph
+	m = 0
+	s = 0
+	G = InvestigateGraph(ldt)
+	for i in range(10):
+		G.perturb_graph(0.5, 0.5)
+		if not is_cograph(G._G_perturbed) and not is_compatible(G._G_perturbed):
+			m += 1
+			edited_G = G.cograph_editing()
+			color_graph(ldt, edited_G)
+			isConsistent = is_compatible(edited_G, G._G)
+
+			is_edited_G_properly_colored = is_properly_colored(edited_G)
+			if not isConsistent:
+				#new_edited_G, _ = G.triples_editing(G = edited_G, destroy_K3 = 1)
+				new_edited_G, _ = G.triples_editing2(G = edited_G)
+
+				#note edited_G might be None
+				if new_edited_G:
+					#is_edited_G_properly_colored = is_properly_colored(new_edited_G)
+					is_edited_G_cograph = is_cograph(new_edited_G)
+					is_edited_G_consistent = is_compatible(new_edited_G)
+				else:
+					is_edited_G_cograph = is_cograph(edited_G)
+					is_edited_G_consistent = True
+
+			if is_edited_G_properly_colored and is_edited_G_cograph and is_edited_G_consistent:
+				s += 1
+	print("The amount of graphs that were not cographs nor compatible: {}".format(m))
+	print("S = {}".format(s))
+	if m > 0:
+		print("The frequency of graphs that became LDT-graphs as a result of both cograph and triples editing: {}".format(s/m))
+	else:
+		print("No graph became an LDT-graph.")
+
+
+
 
 def compare_P3(G, perturbed_G):
 	"""
@@ -156,7 +220,6 @@ def compare_P3(G, perturbed_G):
 	print(edited_region_distances)
 
 	
-
 def ILP_solver(G):
 	"""
 		takes an LDT graph and perturbs it (ensuring it's no longer an ldt graph)
@@ -180,7 +243,7 @@ def ILP_solver(G):
 
 	edit_dist = gt.symmetric_diff(IG._G_perturbed, sol_graph)
 	print("The value of the ILP: {}".format(sol_distance))
-	print("The value of the symmetric distance: {}".format(edit_dist))
+	print("The value of the symmetric difference: {}".format(edit_dist))
 	print("Runtime: {}".format(solver.get_solve_time()))
 	if properly_colored and cograph and compatible:
 		print("Saving data...")
@@ -208,11 +271,18 @@ def compare_edits_to_exact_results():
 			print("\nThe graph G in the file '{}' was not turned into an LDT-graph as a result of cograph editing!".format(filename))
 
 
+
+
+
+# TODO: Plot frequencies for different node sizes.
+#		triplesEdit 1, 2 and 3.
+# plot using table bar plot with node size n in table.
 if __name__ == "__main__":
-	run_investigation()
-	#ILP_solver(ldt)
+	#run_investigation()
+	ILP_solver(ldt)
 	#G = InvestigateGraph(ldt)
 	#G.perturb_graph()
 	#compare_P3(ldt, G._G_perturbed)
 	#compare_edits_to_exact_results()
+	#ldt_edit()
 	pass

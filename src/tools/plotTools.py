@@ -37,7 +37,7 @@ ldt = ldt_graph(OGT, S)
 
 
 
-def plot_frequencies(G, n, filename="cographEdit_and_weighted_mincut_triples_edit"):
+def plot_frequencies(G, n, m, filename="cographEdit_and_weighted_mincut_triples_edit"):
 	# -1 means there were no cases.
 
 	# frequency of cograph editing turning the graph into a cograph
@@ -103,7 +103,7 @@ def plot_frequencies(G, n, filename="cographEdit_and_weighted_mincut_triples_edi
 		triples_f5 = -0.1
 
 	# get new ID for current filename
-	new_name = "graphs/" + filename + "_6.png"
+	new_name = "graphs/" + filename + "_{}.png".format(n)
 
 	# plot cograph and triples frequencies side by side.
 
@@ -117,11 +117,114 @@ def plot_frequencies(G, n, filename="cographEdit_and_weighted_mincut_triples_edi
 	plt.bar(X_axis+0.2, triples_values, 0.4, label = 'Triples edit')
 
 	plt.xticks(X_axis, X)
-	plt.title("Cograph vs triples editing on 100 perturbed graphs with {} nodes".format(n))
+	plt.title("Cograph vs triples editing on {} perturbed graphs with {} nodes".format(m, n))
 	plt.ylim(0.1, 2.0)
 	plt.legend()
-	#plt.savefig(new_name)
+	plt.savefig(new_name)
 	plt.show()
 
-def plot_success_data(G):
-	pass
+
+
+
+
+
+def plot_tableBar(list_of_Gs, n_values, m, filename = ""):
+
+	triples_values = []
+	cograph_values = []
+	for G in list_of_Gs:
+		# -1 means there were no cases.
+
+		# frequency of cograph editing turning the graph into a cograph
+		if G._count_dG_not_cograph > 0:
+			cograph_f1 = G._count_cographEdit_success / G._count_dG_not_cograph
+		else:
+			cograph_f1 = -0.1
+
+		# frequency of cograph editing making the set of triples consistent. that is, the set of triples goes from inconsistent to consistent as a result of cograph editing.
+		if G._count_dG_notCograph_notConsistent > 0:
+			cograph_f2 = G._count_cographEdit_fixed_consistency/G._count_dG_notCograph_notConsistent
+		else:
+			cograph_f2 = -0.1
+
+		# frequency of the set of triples remaining consistent after cograph editing
+		if G._count_dG_notCograph_consistent > 0:
+			cograph_f3 = G._count_cographEdit_remained_consistent / G._count_dG_notCograph_consistent
+		else:
+			cograph_f3 = -0.1
+
+		# frequency of the graph remaining properly colored after cograph editing.
+		if G._count_dG_not_cograph > 0:
+			cograph_f4 = G._count_cographEdit_remain_properly_colored / G._count_dG_not_cograph
+		else:
+			cograph_f4 = -0.1
+
+		# frequency of cograph editing turning the graph into an LDT-graph
+		if G._count_dG_not_cograph > 0:
+			cograph_f5 = G._count_cographEdit_to_LDT / G._count_dG_not_cograph
+		else:
+			cograph_f5 = -0.1
+
+
+
+		# frequency of triples editing making the set of triples consistent.
+		if G._count_dG_not_consistent > 0:
+			triples_f1 = G._count_triplesEdit_success / G._count_dG_not_consistent
+		else:
+			triples_f1 = -0.1
+
+		# frequency of triples editing turning the graph into a cograph.
+		if G._count_dG_notCograph_notConsistent > 0:
+			triples_f2 = G._count_triplesEdit_fixed_cograph / G._count_dG_notCograph_notConsistent
+		else:
+			triples_f2 = -0.1
+
+		# frequency of graph remaining a cograph after triples ediiting.
+		if G._count_dG_cograph_notConsistent > 0:
+			triples_f3 = G._count_triplesEdit_remained_cograph / G._count_dG_cograph_notConsistent
+		else:
+			triples_f3 = -0.1
+
+		# frequency of the graph remaining properly colored after triples editing.
+		if G._count_dG_not_consistent > 0:
+			triples_f4 = G._count_triplesEdit_remain_properly_colored / G._count_dG_not_consistent
+		else:
+			triples_f4 = -0.1
+
+		# frequency of triples editing turning the graph into an LDT-graph.
+		if G._count_dG_not_consistent > 0:
+			triples_f5 = G._count_triplesEdit_to_LDT / G._count_dG_not_consistent
+		else:
+			triples_f5 = -0.1
+
+		# store values in lists
+		tv = [triples_f1, triples_f2, triples_f3, triples_f4, triples_f5]
+		triples_values.append(tv)
+		cv = [cograph_f1, cograph_f2, cograph_f3, cograph_f4, cograph_f5]
+		cograph_values.append(cv)
+
+	
+	# get new ID for current filename
+	new_name = "graphs/" + filename + "_{}.png".format(n)
+
+	# plot cograph and triples frequencies side by side.
+
+	X = ["G1", "G2", "G3", "G4"]
+	cograph_values = [cograph_f1, cograph_f2, cograph_f4, cograph_f5]
+	triples_values = [triples_f1, triples_f2, triples_f4, triples_f5]
+	colors = ['blue', 'green']
+	X_axis = np.arange(len(X))
+	
+	plt.bar(X_axis-0.2, cograph_values, 0.4, label = 'Cograph edit')
+	plt.bar(X_axis+0.2, triples_values, 0.4, label = 'Triples edit')
+
+	plt.xticks(X_axis, X)
+	plt.title("Cograph vs triples editing on {} perturbed graphs with {} nodes".format(m, n))
+	plt.ylim(0.1, 2.0)
+	plt.legend()
+	plt.savefig(new_name)
+	plt.show()
+
+
+
+

@@ -95,7 +95,7 @@ class LDTEditor:
 		self._properly_colored_constraint()
 		self._cograph_constraint()
 		self._strictly_dense_constraint()
-		self._consitency_constraint()
+		self._consistency_constraint()
 		self._triples_constraint()
 
 	def _objective(self):
@@ -180,7 +180,7 @@ class LDTEditor:
 		
 
 	# constraint 4
-	def _consitency_constraint(self):
+	def _consistency_constraint(self):
 		for a, b, c, d in itertools.permutations([*self.color_dict], 4):
 
 			ab = sorted([a, b])
