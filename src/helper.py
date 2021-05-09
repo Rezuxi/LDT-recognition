@@ -246,8 +246,9 @@ def bar_dot_plot(c_f, t1_f, t2_f, t3_f, m, n, initial_num_edges, exact_sol_num_e
 			y_exact_sol_edge_count.append(float('NaN'))
 
 	# DOT PLOT (EDGE COUNT)
-	plt.rcParams["figure.figsize"] = (15, 6)
-	plt.title("Edge count of input graph and edited LDT-graphs    {} nodes".format(n))
+	plt.subplot(211)
+	plt.rcParams["figure.figsize"] = (15, 5)
+	
 	plt.plot(x, y_exact_sol_edge_count, 's', color='green', label = 'exact solution graph')
 	plt.plot(x, y_init_edge_count, 'o', color='brown', label = 'input graph')
 	plt.plot(x, y_c_edge_count, 'o', color='black', label = 'cograph edited LDT-graph')
@@ -255,13 +256,13 @@ def bar_dot_plot(c_f, t1_f, t2_f, t3_f, m, n, initial_num_edges, exact_sol_num_e
 	plt.plot(x, y_t2_edge_count, 'o', color='red', label = 'triples edited (2) LDT-graph')
 	plt.plot(x, y_t3_edge_count, 'o', color='orange', label = 'triples edited (3) LDT-graph')
 
-
+	plt.title("Edge count of input graph and edited LDT-graphs    {} nodes".format(n))
 	plt.xticks(np.arange(min(x), max(x)+1, 2.0))
 	plt.ylabel("edge count")
 	plt.xlabel("graph No.")
 	plt.legend(bbox_to_anchor=(1.10, 1), loc='upper right', fontsize='small')
 	plt.tight_layout()
-	plt.show()
+	#plt.show()
 
 	y_c_edit_dist = get_y_values(c_is_ldt, c_edit_dist)
 	y_t1_edit_dist = get_y_values(t1_is_ldt, t1_edit_dist)
@@ -269,18 +270,22 @@ def bar_dot_plot(c_f, t1_f, t2_f, t3_f, m, n, initial_num_edges, exact_sol_num_e
 	y_t3_edit_dist = get_y_values(t3_is_ldt, t3_edit_dist)
 
 	# DOT PLOT (EDIT DISTANCE)
+	plt.subplot(212)
 	plt.plot(x, y_min_edit_dist, 's', color='green', label = 'exact solution graph')
 	plt.plot(x, y_c_edit_dist, 'o', color='black', label = 'cograph edited LDT-graph')
 	plt.plot(x, y_t1_edit_dist, 'o', color='purple', label = 'triples edited (1) LDT-graph')
 	plt.plot(x, y_t2_edit_dist, 'o', color='red', label = 'triples edited (2) LDT-graph')
 	plt.plot(x, y_t3_edit_dist, 'o', color='orange', label = 'triples edited (3) LDT-graph')
 
+	plt.title("min edit distance compared to edit distance of edited LDT-graphs    {} nodes".format(n))
 	plt.xticks(np.arange(min(x), max(x)+1, 2.0))
 	plt.ylabel("edit distance (symmetric difference)")
 	plt.xlabel("graph No.")
 	plt.legend(bbox_to_anchor=(1.10, 1), loc='upper right', fontsize='small')
 	plt.tight_layout()
 	plt.show()
+
+	# make dot plots into subplots stacked ontop of eachother
 
 def benchmark(n):
 
@@ -362,5 +367,5 @@ def benchmark(n):
 
 		
 
-#benchmark(15)
-generate_solutions(20)
+benchmark(18)
+#generate_solutions(18)
