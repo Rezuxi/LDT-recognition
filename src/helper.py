@@ -389,5 +389,5 @@ def benchmark(n):
 
 		
 
-benchmark(15)
+benchmark(20)
 #generate_solutions(20)
