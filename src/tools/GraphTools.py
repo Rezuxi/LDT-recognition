@@ -354,7 +354,9 @@ def destroy_K3s_overlapping_edge(G, e, K3s, K3_edge_weights):
 				G.remove_edge(*e1)
 
 			if G.has_edge(*e2):
+				G.remove_edge(*e2)
 				if K3_edge_weights[e2] > 1:
+					# remove e2 here (?)
 					destroy_K3s_overlapping_edge(G, e2, K3s, K3_edge_weights)		# O(|K| - 1) (worst case) ?. This runs at most |K| - 1 times since we can at most remove all K3s excluding this.
 		# TODO: update list of K3s as we remove edges
 
@@ -805,6 +807,45 @@ class InvestigateGraph:
 							#print("added edge {}".format(best_edge))
 							broken = True
 
+		return copy_G, tree_triples
+
+
+	def triples_editing3(self, mincut=True, weighted_mincut=True, n = 1):
+		'''
+			do triples editing up to n times or until the edited graphs set of triples becomes consistent
+		'''
+		copy_G = self._G_perturbed.copy()
+		for i in range(n):
+			triples, species_leaves, triangles, triples_dict = get_species_triples(copy_G, self._G)		
+
+			if len(triples) == 0:
+				return None, None
+
+			B = tools.Build(triples, species_leaves, mincut=mincut, weighted_mincut=weighted_mincut)	
+			tree_triples = B.build_tree()															
+			
+			if len(B.cut_list) > 0:
+				insert_edges = weight_edges(copy_G, triples_dict, triangles, B.cut_list)		
+				for X, Y, Z in triples_dict:										
+					if (X, Y) in B.cut_list or (Y, X) in B.cut_list:					
+						for a, b, c in triples_dict[(X, Y, Z)]:								
+
+							if not (copy_G.has_edge(a, c) and copy_G.has_edge(b, c)) or copy_G.has_edge(a, b):
+								continue
+						
+							best_edge, to_delete, _ = self.edge_to_edit(a, b, c, insert_edges, copy_G)
+							if to_delete:
+								copy_G.remove_edge(*best_edge)
+								broken = True
+							else:
+								copy_G.add_edge(*best_edge)
+								broken = True
+				if is_compatible(copy_G):
+					return copy_G, tree_triples
+				else:
+					copy_G = copy_G.copy()
+			else:
+				break
 		return copy_G, tree_triples
 
 	# O(|V| + |E||V| + |K| + BUILD + |E| + |R||A||B| + |R||A||K| + |A||B||K|^2) (this last term is most likely upper bound since we can remove at most |K| K3s and we remove 1 per call)

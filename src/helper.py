@@ -100,9 +100,12 @@ def triples_editing(IG, a):
 		if a == 1:
 			edited_G, _ = IG.triples_editing()
 		elif a == 2:
-			edited_G, _ = IG.triples_editing(destroy_K3 = 1)	
+			edited_G, _ = IG.triples_editing3(n = 10)
 		elif a == 3:
+			edited_G, _ = IG.triples_editing(destroy_K3 = 1)	
+		elif a == 4:
 			edited_G, _ = IG.triples_editing2()
+
 
 		if edited_G == None:
 			edited_G_is_compatible = True
@@ -204,21 +207,23 @@ def get_y_values(bool_list, values_list):
 			y_values.append(float('NaN'))
 	return y_values
 
-def bar_dot_plot(c_f, t1_f, t2_f, t3_f, m, n, initial_num_edges, exact_sol_num_edges, exact_sol_min_dist,
+def bar_dot_plot(c_f, t1_f, t2_f, t3_f, t4_f, m, n, initial_num_edges, exact_sol_num_edges, exact_sol_min_dist,
 											c_edge_count, c_edit_dist, c_is_ldt,
 											t1_edge_count, t1_edit_dist, t1_is_ldt,
 											t2_edge_count, t2_edit_dist, t2_is_ldt,
-											t3_edge_count, t3_edit_dist, t3_is_ldt
+											t3_edge_count, t3_edit_dist, t3_is_ldt,
+											t4_edge_count, t4_edit_dist, t4_is_ldt
 											):
 
 	X_bar = ["G1", "G2", "G3", "G4"]
 	X_axis = np.arange(len(X_bar))
 
 	# BAR PLOT
-	plt.bar(X_axis + 0.00, c_f, label = 'Cograph editing', width = 0.20)
-	plt.bar(X_axis + 0.20, t1_f, label = 'Triples editing 1', width = 0.20)
-	plt.bar(X_axis + 0.40, t2_f, label = 'Triples editing 2', width = 0.20)
-	plt.bar(X_axis + 0.60, t3_f, label = 'Triples editing 3', width = 0.20)
+	plt.bar(X_axis + 0.00, c_f, label = 'Cograph editing', width = 0.15)
+	plt.bar(X_axis + 0.15, t1_f, label = 'Triples editing 1', width = 0.15)
+	plt.bar(X_axis + 0.30, t2_f, label = 'Triples editing 2', width = 0.15)
+	plt.bar(X_axis + 0.45, t3_f, label = 'Triples editing 3', width = 0.15)
+	plt.bar(X_axis + 0.60, t4_f, label = 'Triples editing 4', width = 0.15)
 
 	plt.xticks(X_axis, X_bar)
 	plt.title("Cograph vs triples editing on {} perturbed graphs with {} nodes".format(m, n))
@@ -231,6 +236,7 @@ def bar_dot_plot(c_f, t1_f, t2_f, t3_f, m, n, initial_num_edges, exact_sol_num_e
 	y_t1_edge_count = get_y_values(t1_is_ldt, t1_edge_count)
 	y_t2_edge_count = get_y_values(t2_is_ldt, t2_edge_count)
 	y_t3_edge_count = get_y_values(t3_is_ldt, t3_edge_count)
+	y_t4_edge_count = get_y_values(t4_is_ldt, t4_edge_count)
 
 	y_init_edge_count = []
 	y_min_edit_dist = []
@@ -253,8 +259,9 @@ def bar_dot_plot(c_f, t1_f, t2_f, t3_f, m, n, initial_num_edges, exact_sol_num_e
 	plt.plot(x, y_init_edge_count, 'o', color='brown', label = 'input graph')
 	plt.plot(x, y_c_edge_count, 'o', color='black', label = 'cograph edited LDT-graph')
 	plt.plot(x, y_t1_edge_count, 'o', color='purple', label = 'triples edited (1) LDT-graph')
-	plt.plot(x, y_t2_edge_count, 'o', color='red', label = 'triples edited (2) LDT-graph')
-	plt.plot(x, y_t3_edge_count, 'o', color='orange', label = 'triples edited (3) LDT-graph')
+	plt.plot(x, y_t2_edge_count, 'o', color='pink', label = 'triples edited (2) LDT-graph')
+	plt.plot(x, y_t3_edge_count, 'o', color='red', label = 'triples edited (3) LDT-graph')
+	plt.plot(x, y_t4_edge_count, 'o', color='orange', label = 'triples edited (4) LDT-graph')
 
 	plt.title("Edge count of input graph and edited LDT-graphs    {} nodes".format(n))
 	plt.xticks(np.arange(min(x), max(x)+1, 2.0))
@@ -268,14 +275,16 @@ def bar_dot_plot(c_f, t1_f, t2_f, t3_f, m, n, initial_num_edges, exact_sol_num_e
 	y_t1_edit_dist = get_y_values(t1_is_ldt, t1_edit_dist)
 	y_t2_edit_dist = get_y_values(t2_is_ldt, t2_edit_dist)
 	y_t3_edit_dist = get_y_values(t3_is_ldt, t3_edit_dist)
+	y_t4_edit_dist = get_y_values(t4_is_ldt, t4_edit_dist)
 
 	# DOT PLOT (EDIT DISTANCE)
 	plt.subplot(212)
 	plt.plot(x, y_min_edit_dist, 's', color='green', label = 'exact solution graph')
 	plt.plot(x, y_c_edit_dist, 'o', color='black', label = 'cograph edited LDT-graph')
 	plt.plot(x, y_t1_edit_dist, 'o', color='purple', label = 'triples edited (1) LDT-graph')
-	plt.plot(x, y_t2_edit_dist, 'o', color='red', label = 'triples edited (2) LDT-graph')
-	plt.plot(x, y_t3_edit_dist, 'o', color='orange', label = 'triples edited (3) LDT-graph')
+	plt.plot(x, y_t2_edit_dist, 'o', color='pink', label = 'triples edited (2) LDT-graph')
+	plt.plot(x, y_t3_edit_dist, 'o', color='red', label = 'triples edited (3) LDT-graph')
+	plt.plot(x, y_t4_edit_dist, 'o', color='orange', label = 'triples edited (4) LDT-graph')
 
 	plt.title("min edit distance compared to edit distance of edited LDT-graphs    {} nodes".format(n))
 	plt.xticks(np.arange(min(x), max(x)+1, 2.0))
@@ -293,6 +302,7 @@ def benchmark(n):
 	t1_graphs, t1_edge_count, t1_is_ldt, t1_edit_dist = ([] for i in range(4))
 	t2_graphs, t2_edge_count, t2_is_ldt, t2_edit_dist = ([] for i in range(4))
 	t3_graphs, t3_edge_count, t3_is_ldt, t3_edit_dist = ([] for i in range(4))
+	t4_graphs, t4_edge_count, t4_is_ldt, t4_edit_dist = ([] for i in range(4))
 
 	init_edge_amounts = []
 	exact_sol_edge_amounts = []
@@ -308,6 +318,7 @@ def benchmark(n):
 			IG1 = InvestigateGraph(edited_G, disturbed_G = G)
 			IG2 = copy.deepcopy(IG1)
 			IG3 = copy.deepcopy(IG1)
+			IG4 = copy.deepcopy(IG1)
 		else:
 			IG1.set_perturbed_graph(G)
 			IG1.set_G(edited_G)
@@ -318,6 +329,9 @@ def benchmark(n):
 			IG3.set_perturbed_graph(G)
 			IG3.set_G(edited_G)
 
+			IG4.set_perturbed_graph(G)
+			IG4.set_G(edited_G)
+
 		initial_num_edges = len(G.edges())
 		exact_sol_num_edges = len(edited_G.edges())
 
@@ -325,6 +339,8 @@ def benchmark(n):
 		triples1_edited_G, is_t1_ldt, t1_num_edges, t1_ldt_edit_dist = triples_editing(IG1, 1)
 		triples2_edited_G, is_t2_ldt, t2_num_edges, t2_ldt_edit_dist = triples_editing(IG2, 2)
 		triples3_edited_G, is_t3_ldt, t3_num_edges, t3_ldt_edit_dist = triples_editing(IG3, 3)
+		triples4_edited_G, is_t4_ldt, t4_num_edges, t4_ldt_edit_dist = triples_editing(IG4, 4)
+
 
 		exact_sol_min_dist.append(min_edit_dist)
 
@@ -335,37 +351,43 @@ def benchmark(n):
 		t1_graphs.append(triples1_edited_G)
 		t2_graphs.append(triples2_edited_G)
 		t3_graphs.append(triples3_edited_G)
+		t4_graphs.append(triples4_edited_G)
 
 		c1_is_ldt.append(is_c1_ldt)
 		t1_is_ldt.append(is_t1_ldt)
 		t2_is_ldt.append(is_t2_ldt)
 		t3_is_ldt.append(is_t3_ldt)
+		t4_is_ldt.append(is_t4_ldt)
 
 		c1_edge_count.append(c1_num_edges)
 		t1_edge_count.append(t1_num_edges)
 		t2_edge_count.append(t2_num_edges)
 		t3_edge_count.append(t3_num_edges)
+		t4_edge_count.append(t4_num_edges)
 
 		c1_edit_dist.append(c1_ldt_edit_dist)
 		t1_edit_dist.append(t1_ldt_edit_dist)
 		t2_edit_dist.append(t2_ldt_edit_dist)
 		t3_edit_dist.append(t3_ldt_edit_dist)
+		t4_edit_dist.append(t4_ldt_edit_dist)
 
 	triples1_freq, cograph_freq = get_freq(IG1)
 	triples2_freq, _ 			= get_freq(IG2)
 	triples3_freq, _ 			= get_freq(IG3)
+	triples4_freq, _ 			= get_freq(IG4)
 
 	
 	# create bar plot with scatter plot to the right with edit dist and edge count for each graph that became LDT graph.
-	bar_dot_plot(cograph_freq, triples1_freq, triples2_freq, triples3_freq, 
+	bar_dot_plot(cograph_freq, triples1_freq, triples2_freq, triples3_freq, triples4_freq,
 				100, n, init_edge_amounts, exact_sol_edge_amounts, exact_sol_min_dist,
 				c1_edge_count, c1_edit_dist, c1_is_ldt,
 				t1_edge_count, t1_edit_dist, t1_is_ldt,
 				t2_edge_count, t2_edit_dist, t2_is_ldt,
-				t3_edge_count, t3_edit_dist, t3_is_ldt
+				t3_edge_count, t3_edit_dist, t3_is_ldt,
+				t4_edge_count, t4_edit_dist, t4_is_ldt
 				)
 
 		
 
-benchmark(18)
-#generate_solutions(18)
+benchmark(15)
+#generate_solutions(20)

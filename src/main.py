@@ -30,8 +30,10 @@ print("Amount of colors: {}".format(len(colors)))
 print("Amount of edges: {}".format(len(ldt.edges())))
 
 def run_investigation():
+	a = 0
+	l = 0
 	average_edge = 0
-	m = 100
+	m = 10
 	
 	#list_of_Gs = []
 	#global p3_average_triples
@@ -101,7 +103,7 @@ def run_investigation():
 		# and store the frequency of that.
 		
 		if not G._is_compatible:
-			
+			a += 1
 			G._count_dG_not_consistent += 1
 
 			if G._is_cograph:
@@ -109,7 +111,8 @@ def run_investigation():
 			#print("amount of edges in perturbed G: {}".format(len(G._G_perturbed.edges())))
 			#edited_G, _ = G.triples_editing()
 			#edited_G, _ = G.triples_editing(destroy_K3 = 1)
-			edited_G, _ = G.triples_editing2()
+			#edited_G, _ = G.triples_editing2()
+			edited_G, _ = G.triples_editing3(n = 10)
 			#print("amount of edges in edited_G: {}".format(len(edited_G.edges())))
 			# in this case, no edit was made since the set of triples was empty. the empty set is a consistent set of triples.
 			if edited_G == None:
@@ -127,6 +130,10 @@ def run_investigation():
 			if edited_G_is_compatible:
 				G._count_triplesEdit_success += 1
 
+			if not edited_G_is_cograph:
+				new_edited_G = G.cograph_editing(G = edited_G)
+				if is_cograph(new_edited_G) and is_properly_colored(new_edited_G, colored_G = edited_G) and is_compatible(new_edited_G, colored_G = edited_G):
+					l += 1
 
 			if edited_G_is_cograph and edited_G_is_compatible and edited_G_is_properly_colored:
 				if edited_G:
@@ -156,6 +163,8 @@ def run_investigation():
 	print("Amount of nodes: {}".format(len(ldt.nodes())))
 	print("Amount of colors: {}".format(len(colors)))
 	print("Amount of edges in the original ldt-graph: {}".format(len(ldt.edges())))
+	if a > 0:
+		print("Frequency of triples+cograph editing turning G into an LDT-graph: {}".format(l/a))
 	if G._count_triplesEdit_to_LDT > 0:
 		print("Average edges remaining in LDT-graphs: {}".format(average_edge/G._count_triplesEdit_to_LDT))
 	#plot_tableBar(list_of_Gs, m)
@@ -278,8 +287,8 @@ def compare_edits_to_exact_results():
 #		triplesEdit 1, 2 and 3.
 # plot using table bar plot with node size n in table.
 if __name__ == "__main__":
-	#run_investigation()
-	ILP_solver(ldt)
+	run_investigation()
+	#ILP_solver(ldt)
 	#G = InvestigateGraph(ldt)
 	#G.perturb_graph()
 	#compare_P3(ldt, G._G_perturbed)
