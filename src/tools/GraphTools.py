@@ -399,6 +399,7 @@ class InvestigateGraph:
 		self._count_triplesEdit_remained_cograph = 0
 		self._count_cographEdit_remained_consistent = 0
 
+		self._count_ldtEdit_success = 0
 
 		# count how many times the disturbed graph is not a cograph and not consistent
 		# so that we can compare the success rate of each heuristic.

@@ -133,8 +133,113 @@ def count_files(n, filename):
 			all_files.append(file)
 	return len(all_files)
 
-k = count_files(10, 'exact_solutions/015_030')
-print(k)
+
+def triples_editing(IG, n = 1, deletion = False, insertion = False):
+	if not IG._is_compatible:
+		IG._count_dG_not_consistent += 1
+
+		if IG._is_cograph:
+			IG._count_dG_cograph_notConsistent += 1
+		else:
+			IG._count_dG_notCograph_notConsistent += 1
+
+
+		edited_G, triples = IG.triples_editing(n = n, deletion = deletion, insertion = insertion)
+		
+
+		if triples == None:
+			edited_G_is_compatible = True
+			edited_G_is_cograph = is_cograph(edited_G)
+			edited_G_is_properly_colored = is_properly_colored(edited_G, IG._G)
+		else:
+			edited_G_is_compatible = is_compatible(edited_G, IG._G)
+			edited_G_is_cograph = is_cograph(edited_G)
+			edited_G_is_properly_colored = is_properly_colored(edited_G, IG._G)
+
+		if edited_G_is_properly_colored:
+			IG._count_triplesEdit_remain_properly_colored += 1
+
+		if edited_G_is_compatible:
+			IG._count_triplesEdit_success += 1
+
+		if edited_G_is_cograph and IG._is_cograph:
+			IG._count_triplesEdit_remained_cograph += 1
+		elif edited_G_is_cograph and not IG._is_cograph:
+			IG._count_triplesEdit_fixed_cograph += 1	
+		elif not edited_G_is_cograph and IG._is_cograph:
+			IG._count_triplesEdit_broke_cograph += 1
+
+		if edited_G_is_cograph and edited_G_is_compatible and edited_G_is_properly_colored:
+			IG._count_triplesEdit_to_LDT += 1
+			number_edges_remaining = len(edited_G.edges())
+			edit_dist = gt.symmetric_diff(IG._G_perturbed, edited_G)
+			return edited_G, True, number_edges_remaining, edit_dist
+	return None, False, None, None
+
+
+def cograph_editing(IG):
+	if not IG._is_cograph:
+
+		IG._count_dG_not_cograph += 1
+
+		if not IG._is_compatible:
+			IG._count_dG_notCograph_notConsistent += 1
+		else:
+			IG._count_dG_notCograph_consistent += 1
+
+		# check that the edited graph is a cograph, properly colored and has a set of triples that is compatible.
+		edited_G = IG.cograph_editing()
+		edited_G_is_cograph = is_cograph(edited_G)
+		edited_G_is_properly_colored = is_properly_colored(edited_G, IG._G)
+		edited_G_is_compatible = is_compatible(edited_G, IG._G)
+
+
+		if edited_G_is_cograph:
+			
+			IG._count_cographEdit_success += 1
+
+			if edited_G_is_properly_colored:
+				IG._count_cographEdit_remain_properly_colored += 1
+
+			if edited_G_is_compatible and IG._is_compatible:
+				IG._count_cographEdit_remained_consistent += 1
+			elif edited_G_is_compatible and not IG._is_compatible:
+				IG._count_cographEdit_fixed_consistency += 1
+			elif not edited_G_is_compatible and IG._is_compatible:
+				IG._count_cographEdit_broke_consistency += 1
+
+			if edited_G_is_compatible and edited_G_is_properly_colored:
+				IG._count_cographEdit_to_LDT += 1
+				number_edges_remaining = len(edited_G.edges())
+				edit_dist = gt.symmetric_diff(IG._G_perturbed, edited_G)
+				return edited_G, True, number_edges_remaining, edit_dist
+
+	return None, False, None, None
+
+
+def LDT_editing(IG, n = 1, deletion = False, insertion = False):
+	triples_edited_G, _ = self.triples_editing(n = n, deletion = d, insertion = i)
+	is_properly_colored = True
+	if (d ^ i):
+		# only insert or delete so we are sure to make G consistent.
+		isConsistent = True
+	else:
+		isConsistent = is_compatible(triples_edited_G)
+	isCograph = is_cograph(triples_edited_G)
+
+	if not isCograph:
+		cograph_edited_G = self.cograph_editing(G = triples_edited_G)
+	else:
+		print("Triples editing -> LDT")
+		return triples_edited_G
+
+	color_graph(self._G, cograph_edited_G)
+	properClrd_cograph = make_properly_colored(cograph_edited_G)
+	isCograph = is_cograph(properClrd_cograph)
+	isConsistent = is_compatible(properClrd_cograph)
+	if isConsistent and isCograph:
+		return properClrd_cograph
+	return None
 
 #generate_solutions_fromTrees(10, 'exact_solutions/trees')
 
