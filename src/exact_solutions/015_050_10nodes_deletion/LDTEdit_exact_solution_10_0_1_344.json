@@ -1,0 +1,191 @@
+{
+      "solve_time": 0.15349388122558594,
+      "n": 10,
+      "only_add": false,
+      "only_delete": true,
+      "min_edit_dist": 2.0,
+      "insert_p": 0.15,
+      "delete_p": 0.5,
+      "G": {
+            "directed": false,
+            "multigraph": false,
+            "graph": {},
+            "nodes": [
+                  {
+                        "label": "10",
+                        "color": 10,
+                        "id": 10
+                  },
+                  {
+                        "label": "11",
+                        "color": 11,
+                        "id": 11
+                  },
+                  {
+                        "label": "14",
+                        "color": 14,
+                        "id": 14
+                  },
+                  {
+                        "label": "15",
+                        "color": 15,
+                        "id": 15
+                  },
+                  {
+                        "label": "18",
+                        "color": 18,
+                        "id": 18
+                  },
+                  {
+                        "label": "19",
+                        "color": 19,
+                        "id": 19
+                  },
+                  {
+                        "label": "16",
+                        "color": 16,
+                        "id": 16
+                  },
+                  {
+                        "label": "6",
+                        "color": 6,
+                        "id": 6
+                  },
+                  {
+                        "label": "4",
+                        "color": 4,
+                        "id": 4
+                  },
+                  {
+                        "label": "3",
+                        "color": 3,
+                        "id": 3
+                  }
+            ],
+            "links": [
+                  {
+                        "source": 10,
+                        "target": 14
+                  },
+                  {
+                        "source": 10,
+                        "target": 18
+                  },
+                  {
+                        "source": 10,
+                        "target": 4
+                  },
+                  {
+                        "source": 11,
+                        "target": 19
+                  },
+                  {
+                        "source": 15,
+                        "target": 18
+                  },
+                  {
+                        "source": 15,
+                        "target": 4
+                  },
+                  {
+                        "source": 18,
+                        "target": 16
+                  },
+                  {
+                        "source": 16,
+                        "target": 4
+                  },
+                  {
+                        "source": 6,
+                        "target": 4
+                  }
+            ]
+      },
+      "edited_G": {
+            "directed": false,
+            "multigraph": false,
+            "graph": {},
+            "nodes": [
+                  {
+                        "label": "10",
+                        "color": 10,
+                        "id": 10
+                  },
+                  {
+                        "label": "11",
+                        "color": 11,
+                        "id": 11
+                  },
+                  {
+                        "label": "14",
+                        "color": 14,
+                        "id": 14
+                  },
+                  {
+                        "label": "15",
+                        "color": 15,
+                        "id": 15
+                  },
+                  {
+                        "label": "18",
+                        "color": 18,
+                        "id": 18
+                  },
+                  {
+                        "label": "19",
+                        "color": 19,
+                        "id": 19
+                  },
+                  {
+                        "label": "16",
+                        "color": 16,
+                        "id": 16
+                  },
+                  {
+                        "label": "6",
+                        "color": 6,
+                        "id": 6
+                  },
+                  {
+                        "label": "4",
+                        "color": 4,
+                        "id": 4
+                  },
+                  {
+                        "label": "3",
+                        "color": 3,
+                        "id": 3
+                  }
+            ],
+            "links": [
+                  {
+                        "source": 10,
+                        "target": 18
+                  },
+                  {
+                        "source": 10,
+                        "target": 4
+                  },
+                  {
+                        "source": 11,
+                        "target": 19
+                  },
+                  {
+                        "source": 15,
+                        "target": 18
+                  },
+                  {
+                        "source": 15,
+                        "target": 4
+                  },
+                  {
+                        "source": 18,
+                        "target": 16
+                  },
+                  {
+                        "source": 16,
+                        "target": 4
+                  }
+            ]
+      }
+}

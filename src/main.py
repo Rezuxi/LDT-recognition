@@ -73,7 +73,7 @@ def run_investigation():
 				if edited_G_is_properly_colored:
 					G._count_cographEdit_remain_properly_colored += 1
 
-				#triples, leaves = find_all_P3(edited_G, get_triples=True, colored_G=G._G)
+				
 				#print("The set of triples for the cograph is: \n{}".format(triples))
 				if edited_G_is_compatible and edited_G_is_properly_colored:
 					G._count_cographEdit_to_LDT += 1
@@ -88,8 +88,7 @@ def run_investigation():
 					G._count_cographEdit_fixed_consistency += 1
 				elif not edited_G_is_compatible and G._is_compatible:
 					G._count_cographEdit_broke_consistency += 1
-		#triples, _ = find_all_P3(edited_G, G._G)
-		#triples2, _ = find_all_P3(G._G_perturbed)
+
 		#print("Amount of P3s before cograph editing: {}".format(len(triples2)))
 		#print("Amount of P3s in the edited cograph: {}".format(len(triples)))
 		#print("The density of the edited graph is: {}".format(nx.density(edited_G)))

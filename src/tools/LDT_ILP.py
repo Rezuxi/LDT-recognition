@@ -243,30 +243,33 @@ class LDTEditor:
 		return self.model.Runtime
 
 
-	def _save_ILP_data(self, G, edited_G, solve_time, min_edit_dist, only_add=False, only_delete=False, filename='LDTEdit_exact_solution'):
+	def _save_ILP_data(self, G, edited_G, solve_time, min_edit_dist, i_p, d_p, only_add=False, only_delete=False, filename='LDTEdit_exact_solution', folderPath = './exact_results', saveFolder = 'exact_results/', ID = None):
 		n = G.order()
 		ILP_data = {'solve_time': solve_time, 'n': n, 'only_add': only_add, 'only_delete': only_delete, 'min_edit_dist': min_edit_dist,
-					'G': json_graph.node_link_data(G), 'edited_G': json_graph.node_link_data(edited_G)
+					'insert_p': i_p, 'delete_p': d_p, 'G': json_graph.node_link_data(G), 'edited_G': json_graph.node_link_data(edited_G)
 					}
 
-		existing_files = []
+		next_ID = ID
 
-		for _, _, files in os.walk('./exact_results'):
-			for file in files:
-				existing_files.append(file)
+		if not ID:
+			existing_files = []
 
-		def find_ID(f):
-			# regex for finding numbers between '_' and '.' without including the 2 characters.
-			s = re.findall('(?<=\_)([0-9]*?)(?=\.)', f)
-			return int(s[0]) if s else -1
+			for _, _, files in os.walk(folderPath):
+				for file in files:
+					existing_files.append(file)
 
-		next_ID = 0
-		for f in existing_files:
-			ID = find_ID(f)
-			if ID >= next_ID:
-				next_ID = ID + 1
+			def find_ID(f):
+				# regex for finding numbers between '_' and '.' without including the 2 characters.
+				s = re.findall('(?<=\_)([0-9]*?)(?=\.)', f)
+				return int(s[0]) if s else -1
 
-		new_name = 'exact_results/' + filename + "_{}_{}_{}_{}.json".format(n, int(only_add), int(only_delete), next_ID)
+			next_ID = 0
+			for f in existing_files:
+				ID = find_ID(f)
+				if ID >= next_ID:
+					next_ID = ID + 1
+
+		new_name = saveFolder + filename + "_{}_{}_{}_{}.json".format(n, int(only_add), int(only_delete), next_ID)
 		
 		# TODO: handle errors
 		with open(new_name, 'w', encoding='utf-8') as f:
@@ -286,8 +289,10 @@ class LDTEditor:
 		only_add = ILP_data['only_add']
 		only_delete = ILP_data['only_delete']
 		min_edit_dist = ILP_data['min_edit_dist']
+		insert_p = ILP_data['insert_p']
+		delete_p = ILP_data['delete_p']
 		#solve_time = ILP_data['solve_time']
-
+		# TODO: return probabilities
 		return G, edited_G, only_add, only_delete, min_edit_dist
 
 

@@ -94,19 +94,8 @@ def get_species_triples(G, colored_G = None):
 					species_leaves.add(C)
 	return species_triples, species_leaves, K3s, triples_dict
 
-# K3s are given as sorted (a, b, c) where there is an edge between all vertices
-# destroy each K3 by removing 2 edges. This method removes arbitrary edges from each K3
 
-# O(|K|)
-def destroy_K3s(G, K3s):
-	#print("K3s list: {}".format(K3s))
-	for a, b, c in K3s:
-		#print("Destroying K3: {}".format((a, b, c)))
-		# destroy the edges (a, b) and (b, c)
-		if G.has_edge(a, b):
-			G.remove_edge(a, b)
-		if G.has_edge(b, c):
-			G.remove_edge(b, c)
+
 
 
 
@@ -300,268 +289,8 @@ def weight_edges2(G, triples_dict, K3s, cut_list):
 							if triple not in triples_dict:
 								G.edges[bc]['unknowns'] += 1
 	return insert_edges
-# O(|K|)
-def weight_K3s(K3s):
-	# weight each edge of the K3s based on the number of occurrences in K3s.
-	edge_weights = {}
-	for a, b, c in K3s:
-		e1 = (a, b)
-		e2 = (a, c)
-		e3 = (b, c)
-		if not e1 in edge_weights:
-			edge_weights[e1] = 1	
-		else:
-			edge_weights[e1] += 1
-		if not e2 in edge_weights:
-			edge_weights[e2] = 1	
-		else:
-			edge_weights[e2] += 1
-		if not e3 in edge_weights:
-			edge_weights[e3] = 1	
-		else:
-			edge_weights[e3] += 1
-		
-	return edge_weights
-
-# O(|K| * (|K| - 1)) = O(|K|^2)
-# part of triplesEditing3
-def destroy_K3s_overlapping_edge(G, e, K3s, K3_edge_weights):
-	# O(|K|)
-	for a, b, c in K3s:
-		e1 = None 	# first edge to be removed is e (if its in a K3)
-		e2 = None 	# second edge to be removed is the one with least weight -> recursively cut edges until the second edge has weight 0 or K3s is empty.
-		if e == (a, b):
-			e1 = e
-			if K3_edge_weights[(a, c)] <= K3_edge_weights[(b, c)]:
-				e2 = (a, c)
-			else:
-				e2 = (b, c)
-		elif e == (a, c):
-			e1 = e
-			if K3_edge_weights[(a, b)] <= K3_edge_weights[(b, c)]:
-				e2 = (a, b)
-			else:
-				e2 = (b, c)
-		elif e == (b, c):
-			e1 = e
-			if K3_edge_weights[(a, b)] <= K3_edge_weights[(a, c)]:
-				e2 = (a, b)
-			else:
-				e2 = (a, c)
-		# if e1 == None, then this edge did not overlap a K3
-		if e1:
-			if G.has_edge(*e1):
-				G.remove_edge(*e1)
-
-			if G.has_edge(*e2):
-				G.remove_edge(*e2)
-				if K3_edge_weights[e2] > 1:
-					# remove e2 here (?)
-					destroy_K3s_overlapping_edge(G, e2, K3s, K3_edge_weights)		# O(|K| - 1) (worst case) ?. This runs at most |K| - 1 times since we can at most remove all K3s excluding this.
-		# TODO: update list of K3s as we remove edges
 
 
-
-# returns gene triples
-def find_all_P3(G, get_triples=False, colored_G=None):
-	'''
-		Finds all connected triples that don't form a triangle
-		if triples = True (the graph needs to be colored), we also check that the colors are distinct for each node in a triple (a, b, c)
-
-		returns the P3s as a list of lists
-		returns the triples as a list of tuples
-	'''
-	leaves = set()
-	triples = []
-
-	if colored_G:
-		nodes = colored_G.nodes()	
-	else:
-		nodes = G.nodes()
-	
-	for e in G.edges():
-		u_ID = e[0]
-		v_ID = e[1]
-		
-		u_adj = G.adj[u_ID]
-		v_adj = G.adj[v_ID]
-
-
-		for w_ID in u_adj:
-			# if they're the same node, skip
-			if w_ID == v_ID:
-				#print("{} and {} is the same node".format(w_ID, v_ID))
-				continue
-			# if they form a triangle, skip
-			if w_ID in v_adj:
-				#print("Triangle detected for the nodes: {}".format((v_ID, u_ID, w_ID)))
-				continue
-			# if we want a set of triples
-			if get_triples == True:
-				# if the nodes' colors are not pairwise distinct, skip
-				# TODO: take into account that the graph might not be properly colored, so check that all colors of u, v, w are distinct. (after cograph editing, the graph might not be properly colored)
-				if nodes[w_ID]['color'] == nodes[v_ID]['color'] or nodes[u_ID]['color'] == nodes[v_ID]['color'] or nodes[u_ID]['color'] == nodes[w_ID]['color']:
-					#print("Not pairwise distinct colors for: {}".format((v_ID, w_ID, u_ID)))
-					continue
-				else:
-					# if the triples has been counted already
-					if (w_ID, v_ID, u_ID) in triples or (v_ID, w_ID, u_ID) in triples:
-						#print("This triple is already included: {}".format((v_ID, w_ID, u_ID)))
-						continue
-					else:
-						#print("Adding the triple: {}".format((w_ID, v_ID, u_ID)))
-						triples.append((w_ID, v_ID, u_ID))
-						leaves.add(u_ID)
-						leaves.add(v_ID)
-						leaves.add(w_ID)
-			# if we want all P3
-			# all P3 will be of the form (a, b, c) or (c, b, a). i.e., the edges are (a,b) and (b, c)
-			else:
-				if [w_ID, u_ID, v_ID] in triples or [v_ID, u_ID, w_ID] in triples:
-					#print("This P3 is already included: {}".format((v_ID, u_ID, w_ID)))
-					continue
-				else:
-					#print("Adding the P3: {}".format((w_ID, u_ID, v_ID)))
-					triples.append([w_ID, u_ID, v_ID])
-
-
-		for w_ID in v_adj:
-			if w_ID == u_ID:
-				#print("{} and {} is the same node".format(w_ID, u_ID))
-				continue
-			if w_ID in u_adj:
-				#print("Triangle detected for the nodes: {}".format((v_ID, u_ID, w_ID)))
-				continue
-			if get_triples == True:
-				if nodes[w_ID]['color'] == nodes[u_ID]['color'] or nodes[u_ID]['color'] == nodes[v_ID]['color'] or nodes[v_ID]['color'] == nodes[w_ID]['color']:
-					#print("This P3 is already included: {}".format((u_ID, w_ID, v_ID)))
-					continue
-				else:
-					if (w_ID, u_ID, v_ID) in triples or (u_ID, w_ID, v_ID) in triples:
-						#print("This triple is already included: {}".format((u_ID, w_ID, v_ID)))
-						continue
-					else:
-						#print("Adding the triple: {}".format((w_ID, u_ID, v_ID)))
-						triples.append((w_ID, u_ID, v_ID))
-						leaves.add(u_ID)
-						leaves.add(v_ID)
-						leaves.add(w_ID)
-			else:
-				if [w_ID, v_ID, u_ID] in triples or [u_ID, v_ID, w_ID] in triples:
-					#print("This P3 is already included: {}".format((u_ID, v_ID, w_ID)))
-					continue
-				else:
-					#print("Adding the P3: {}".format((w_ID, v_ID, u_ID)))
-					triples.append([w_ID, v_ID, u_ID])
-	return triples, leaves
-
-
-def P3_regions(l, a = 1):
-	'''
-		l is a list of P3s (lists)
-		a is the minimum number of elements regions need to have in common for them to be
-		considered the same.
-
-		returns a list of sets (regions) and a list with amount of P3s per region.
-		the idx of the amount list matches the idx of the list of regions.
-	'''
-
-	regions = []
-	amounts = []
-	#curr_key = 0
-	curr_value = 1
-	while len(l) > 0:
-		head, *tail = l
-		head = set(head)
-		n = -1
-		while len(head) > n:
-			n = len(head)
-			rest = []
-			for t in tail:
-				t = set(t)
-				if len(head.intersection(t)) >= a:
-					curr_value += 1
-					head |= t
-				else:
-					rest.append(t)
-			tail = rest
-		regions.append(head)
-		amounts.append(curr_value)
-		#curr_key += 1
-		curr_value = 1
-		l = tail
-	return regions, amounts
-
-
-def P3_distance(lengths, p1, p2):
-	'''
-		returns the min distance between the path p1 and
-		assumes the shortest path between all pairs has been calculated
-		no need to run nx.all_pairs_shortest_path_length() here
-	'''
-	min_dist = float('inf')
-	for a in p1:
-		d1 = lengths[a][p2[0]]
-		d2 = lengths[a][p2[1]]
-		d3 = lengths[a][p2[2]]
-		min_value = min((d1, d2, d3))
-		if min_value < min_dist:
-			min_dist = min_value
-	return min_dist
-
-
-
-def unique_combinations(*l):
-	'''
-		get all combinations from the lists in l of length n.
-	'''
-	for c in itertools.combinations(l, 2):
-		for pair in itertools.product(*c):
-			yield pair
-
-def regions_distance(G, regions, lengths=None):
-	'''
-		regions is a list of sets containing nodes. each set is its own region.
-		G is the graph containing the nodes in the regions.
-
-		return
-			dictionary with key mapping to the index of the region in the regions list, the value of which is
-			a dictionary with keys mapping to the index of other regions the value of which is the min distance 
-			between the regions.
-	'''
-
-	if not lengths:
-		lengths = dict(nx.all_pairs_shortest_path_length(G))
-	region_distances = {}
-	k = len(regions)
-	for i in range(k):
-		region_distances[i] = dict()
-		for j in range(i+1, k):
-			min_dist = float('inf')
-
-			combinations = unique_combinations(regions[i], regions[j])		
-			for c in combinations:
-				# check if keys exist
-				if c[0] in lengths:
-					if c[1] in lengths[c[0]]:
-						if lengths[c[0]][c[1]] < min_dist:
-							min_dist = lengths[c[0]][c[1]]
-			region_distances[i][j] = min_dist
-	return region_distances 
-
-
-def get_P3_data(G, colored_G=None):
-	if colored_G:
-		P3s, _ = find_all_P3(G, get_triples=True, colored_G=colored_G)
-	else:
-		P3s, _ = find_all_P3(G, get_triples=True)
-
-	#print("P3s: \n{}".format(P3s))
-	#print("length of P3s: {}".format(len(P3s)))
-	regions, amounts = P3_regions(P3s)
-	regions_distances = regions_distance(G, regions)
-
-	return regions, amounts, regions_distances, len(P3s)
 
 
 #####################################################################################
@@ -613,6 +342,14 @@ def is_properly_colored(G, colored_G = None):
 def color_graph(colored_G, G):
 	for n in colored_G.nodes():
 		G.nodes[n]['color'] = colored_G.nodes[n]['color']
+
+def make_properly_colored(G):
+	nodes = G.nodes()
+	copy_G = G.copy()
+	for e in G.edges():
+		if nodes[e[0]]['color'] == nodes[e[1]]['color']:
+			copy_G.remove_edge(e[0], e[1])
+	return copy_G
 
 class InvestigateGraph:
 
@@ -712,7 +449,34 @@ class InvestigateGraph:
 			else:
 				self._is_compatible = False
 			#print("adding noise again!")
-			
+
+
+	def perturb_graph_terminate(self, i_rate = None, d_rate = None, max_attempts = 100):
+		"""
+			Returns true if the graph was perturbed to the point where it is no longer an LDT-graph
+			after max_attempts it returns false if it is still LDT
+		"""
+		for i in range(max_attempts):
+			if i_rate == None:
+				i_rate = round(random.random(), 1)
+			if d_rate == None:
+				d_rate = round(random.random(), 1)
+			if i_rate == 0.0 and d_rate == 0.0:
+				i_rate = round(random.uniform(0.1, 1.0), 1)
+				d_rate = round(random.uniform(0.1, 1.0), 1)
+			self._G_perturbed = disturb_graph(self._G, insertion_prob=i_rate, deletion_prob=d_rate)
+			if is_cograph(self._G_perturbed):
+				self._is_cograph = True
+			else:
+				self._is_cograph = False
+			if is_compatible(self._G_perturbed):
+				self._is_compatible = True
+			else:
+				self._is_compatible = False
+
+			if not (self._is_compatible and self._is_cograph):
+				return True
+		return False	
 
 
 	def set_perturbed_graph(self, G):
@@ -731,95 +495,23 @@ class InvestigateGraph:
 	#										EDITING HEURISTICS												#
 	#																										#
 	#########################################################################################################
-	# O(|E||V| + BUILD + |E| + |R||A||B| + |R||A||K| + |A||B|)  -> 	This is triples edit 1
-	# O(2|E||V| + |K| + BUILD + |E| + |R||A||B| + |R||A||K| + |A||B|)  -> 	This is triples edit 2
-	# TODO: destroy K3s in get_species_triples so that we dont need to rerun it and update the lists
-	#		if all K3s are destroyed then we dont need to weight 'bad' and 'unknowns' for delete edges.
-	def triples_editing(self, delete_edges=True, add_edges=False, mincut=True, weighted_mincut=True, destroy_K3 = None, G = None):
-		"""
-		TODO:
-			If add_edges is set to true the editing of the original graph will delete aswell as add edges
-		"""
-		if G:
-			copy_G = G.copy()
-			color_graph(self._G, copy_G)
-		else:
-			copy_G = self._G_perturbed.copy()
-		#copy_G = copy.deepcopy(self.disturbed_G)
-		# copy_G is colored (?) so dont need to pass in a different colored graph here
-		triples, species_leaves, triangles, triples_dict = get_species_triples(copy_G, self._G)		# O(|E||V|)
-
-		
-		if len(triples) == 0:
-			#print("The set of triples is empty!\n")
-			return None, None
-		# NOTE: If G has less than two nodes an error will occur in the BUILD alg, specifically in stoer_wagner alg.
-
-		if destroy_K3:
-			#print("Amount of K3s: {}".format(len(triangles)))
-			#print("Destroying K3s...")
-			if destroy_K3 == 1:
-				destroy_K3s(copy_G, triangles)	# O(|K|)
-			elif destroy_K3 == 2:
-				# do weighted K3 cuts and make sure to remove exactly 2 (max) edges per K3 (some K3s might share edges)
-				pass
-			# all K3s destroyed so the list is now empty
-			triples, species_leaves, triangles, triples_dict = get_species_triples(copy_G, self._G)		# O(|E||V|)
-			if len(triples) == 0:
-				return None, None
-			#print("Amount of K3s: {}".format(len(triangles)))
-			
 
 
-		B = tools.Build(triples, species_leaves, mincut=mincut, weighted_mincut=weighted_mincut)	
-		tree_triples = B.build_tree()															# runtime for weighted mincut BUILD
-		
-		# NOTE: cut_list is a list of species triples to remove. for example (A, B) could be in cut_list, in which case all triples (A, B, X) for any X need to be removed.
-		# weigh the edges
-		#print("cut_list: {}".format(B.cut_list))
-		if len(B.cut_list) > 0:
-			insert_edges = weight_edges(copy_G, triples_dict, triangles, B.cut_list)	#  O(|E| + |R||A||B| + |R||A||K|) 	
-
-			# decide which edge(s) to remove
-			for X, Y, Z in triples_dict:							# O(|A|)
-				#print("X, Y, Z: {}".format((X, Y, Z)))	
-				if (X, Y) in B.cut_list or (Y, X) in B.cut_list:
-					#print("{} is in cut_list".format(((X, Y))))
-					for a, b, c in triples_dict[(X, Y, Z)]:				# O(|B|)
-						
-
-						# check if P3 is still intact.
-						if not (copy_G.has_edge(a, c) and copy_G.has_edge(b, c)) or copy_G.has_edge(a, b):
-							continue
-						# check which edge of (a, c), (b, c) and (a, b) has the highest weight
-
-						#print("{}: {}\t{}: {}\t{}: {}".format((a, c), (copy_G.edges[(a, c)]['bad'], copy_G.edges[(a, c)]['unknowns'], copy_G.edges[(a, c)]['weight']), 
-						#											  (b, c), (copy_G.edges[(b, c)]['bad'], copy_G.edges[(b, c)]['unknowns'], copy_G.edges[(b, c)]['weight']), 
-						#											  (a, b), (insert_edges[(a, b)]['bad'], insert_edges[(a, b)]['unknowns'], insert_edges[(a, b)]['weight'])))
-						best_edge, to_delete, _ = self.edge_to_edit(a, b, c, insert_edges, copy_G)
-						
-						if to_delete:
-							copy_G.remove_edge(*best_edge)
-							#print("removed edge {}".format(best_edge))
-							broken = True
-						else:
-							copy_G.add_edge(*best_edge)
-							#print("added edge {}".format(best_edge))
-							broken = True
-
-		return copy_G, tree_triples
-
-
-	def triples_editing3(self, mincut=True, weighted_mincut=True, n = 1):
+	def triples_editing(self, mincut=True, weighted_mincut=True, n = 1, deletion = False, insertion = False):
 		'''
 			do triples editing up to n times or until the edited graphs set of triples becomes consistent
+			If restricted to insertion or deletion, then we repeat the editing until consistency, because it will terminate.
+			otherwise it's limited to n iterations
 		'''
 		copy_G = self._G_perturbed.copy()
+		v = len(copy_G.nodes())
+		if insertion ^ deletion:
+			n = int((v * (v-1)) / 2) 			# number of edges in a complete graph. R_G will become consistent before this.
 		for i in range(n):
 			triples, species_leaves, triangles, triples_dict = get_species_triples(copy_G, self._G)		
 
 			if len(triples) == 0:
-				return None, None
+				return copy_G, None
 
 			B = tools.Build(triples, species_leaves, mincut=mincut, weighted_mincut=weighted_mincut)	
 			tree_triples = B.build_tree()															
@@ -832,14 +524,26 @@ class InvestigateGraph:
 
 							if not (copy_G.has_edge(a, c) and copy_G.has_edge(b, c)) or copy_G.has_edge(a, b):
 								continue
-						
-							best_edge, to_delete, _ = self.edge_to_edit(a, b, c, insert_edges, copy_G)
+							
+							if insertion:
+								ins_edge = (a, b)	# insert edge
+								copy_G.add_edge(*ins_edge)
+								continue
+							
+								
+							best_edge, to_delete, best_del_edge = self.edge_to_edit(a, b, c, insert_edges, copy_G)
+							
+							if deletion:
+								copy_G.remove_edge(*best_del_edge)
+								continue
+
+
 							if to_delete:
 								copy_G.remove_edge(*best_edge)
-								broken = True
+								#broken = True
 							else:
 								copy_G.add_edge(*best_edge)
-								broken = True
+								#broken = True
 				if is_compatible(copy_G):
 					return copy_G, tree_triples
 				else:
@@ -848,68 +552,34 @@ class InvestigateGraph:
 				break
 		return copy_G, tree_triples
 
-	# O(|V| + |E||V| + |K| + BUILD + |E| + |R||A||B| + |R||A||K| + |A||B||K|^2) (this last term is most likely upper bound since we can remove at most |K| K3s and we remove 1 per call)
-	# This isnt fixing the set of triples 100% of the time.
-	# It does fix cograph most of the time (because there are very few edges left -> less dense graph)
-	def triples_editing2(self, mincut=True, weighted_mincut=True, G = None):
-		"""
-			1. Get triples and run weighted mincut and get cut_list
-			2. The edges of those K3s that overlap any P3s forming the species triples in cut_list, are weighted based on their occurrences.
-				Once those K3s are destroyed (by removing 2 of their edges), we can remove any edge from a P3 without risking creating a new P3
-			3. Weight the edges ('bad', 'unknowns', 'weight')
-			4. if a P3 can't be removed by introducing new bad P3s then we destroy all those K3s that overlap this edge.
-		"""
-		if G:
-			copy_G = G.copy()
-			color_graph(self._G, copy_G)		# O(|V|)
+
+	def LDT_editing1(self, n = 1, d = False, i = False):
+		'''	
+			1. Triples editing -> cograph editing -> color editing (if not properly colored, makes it so)
+			2. check if consistent and cograph. If yes -> return LDT-graph else return None
+		'''
+		triples_edited_G, _ = self.triples_editing(n = n, deletion = d, insertion = i)
+		is_properly_colored = True
+		if (d ^ i):
+			# only insert or delete so we are sure to make G consistent.
+			isConsistent = True
 		else:
-			copy_G = self._G_perturbed.copy()
-		triples, species_leaves, K3s, triples_dict = get_species_triples(copy_G, self._G) # O(|E||V|)
-		K3_edge_weights = weight_K3s(K3s)												  # O(|K|)
-		if len(triples) == 0:
-			#print("The set of triples is empty!\n")
-			return None, None
+			isConsistent = is_compatible(triples_edited_G)
+		isCograph = is_cograph(triples_edited_G)
 
-		#print("Amount of K3s: {}".format(len(K3s)))
-		#print("Destroying K3s...")
+		if not isCograph:
+			cograph_edited_G = self.cograph_editing(G = triples_edited_G)
+		else:
+			print("Triples editing -> LDT")
+			return triples_edited_G
 
-		B = tools.Build(triples, species_leaves, mincut=mincut, weighted_mincut=weighted_mincut)	
-		tree_triples = B.build_tree()															# weighted mincut BUILD
-		#print("weights of K3s: ")
-		#print(K3_edge_weights)
-		if len(B.cut_list) > 0:
-			insert_edges = weight_edges(copy_G, triples_dict, K3s, B.cut_list) 		# O(|E| + |R||A||B| + |R||A||K|)
-
-			for X, Y, Z in triples_dict:											# O(|A|)
-				if (X, Y) in B.cut_list or (Y, X) in B.cut_list:
-					for a, b, c in triples_dict[(X, Y, Z)]:							# O(|B|)
-						# P3 has been broken, skip
-						if not (copy_G.has_edge(a, c) and copy_G.has_edge(b, c)) or copy_G.has_edge(a, b):
-							continue
-
-						#print("{}: {}\t{}: {}\t{}: {}".format((a, c), (copy_G.edges[(a, c)]['bad'], copy_G.edges[(a, c)]['unknowns'], copy_G.edges[(a, c)]['weight']), 
-						#											  (b, c), (copy_G.edges[(b, c)]['bad'], copy_G.edges[(b, c)]['unknowns'], copy_G.edges[(b, c)]['weight']), 
-						#											  (a, b), (insert_edges[(a, b)]['bad'], insert_edges[(a, b)]['unknowns'], insert_edges[(a, b)]['weight'])))
-						best_edge, to_delete, best_del_edge = self.edge_to_edit(a, b, c, insert_edges, copy_G)
-						# only insert if the edge doesn't introduce new triples
-						if to_delete:
-							copy_G.remove_edge(*best_edge)
-							#print("removed edge {}".format(best_edge))
-							destroy_K3s_overlapping_edge(copy_G, best_edge, K3s, K3_edge_weights)			# O(|K|^2)
-						else:
-							# check if 'bad' and 'unknown' is 0, otherwise choose best delete edge
-							if insert_edges[best_edge]['bad'] == 0 and insert_edges[best_edge]['unknowns'] == 0:
-								copy_G.add_edge(*best_edge)
-								#print("added edge {}".format(best_edge))
-							else:
-								copy_G.remove_edge(*best_del_edge)
-								#print("removed edge {}".format(best_edge))
-								destroy_K3s_overlapping_edge(copy_G, best_del_edge, K3s, K3_edge_weights)
-		triples, species_leaves, K3s, triples_dict = get_species_triples(copy_G)
-		#print("Amount of K3s: {}".format(len(K3s)))
-		#print("The K3s are: {}".format(K3s))
-		return copy_G, tree_triples
-
+		color_graph(self._G, cograph_edited_G)
+		properClrd_cograph = make_properly_colored(cograph_edited_G)
+		isCograph = is_cograph(properClrd_cograph)
+		isConsistent = is_compatible(properClrd_cograph)
+		if isConsistent and isCograph:
+			return properClrd_cograph
+		return None
 
 
 	# choose between 3 edges per P3 based on prio noted above
@@ -957,6 +627,9 @@ class InvestigateGraph:
 		
 
 	def color_editing(self, G=None):
+		'''
+			removes edges between any x, y such that x and y have the same color.
+		'''
 		if G:
 			nodes = G.nodes()
 		else:

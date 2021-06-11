@@ -14,6 +14,117 @@ import matplotlib.pyplot as plt
 # use ILP solver on 100 perturbed graphs with n nodes for different n values
 # save in different folder for different n values.
 
+# TODO: Generate solutions for insertion/deletion only for graphs with 10, 14, 18 nodes (100 graphs each). Do this for p = 0.5, 0.3, 0.15. TEST1 (p=0.15) TEST2 (p=0.3) TEST3 (p=0.5)
+# 		include number of iterations (of triples editing) to make the set of triples consistent. Also include probabilities in json files.
+#		
+#		Simulate species trees using parameters (10, model = 'innovation')
+#				 gene trees using parameters (0.5, 0.5, 0.5, per family, 0.0)
+#
+#	Things to benchmark:
+#			How often each editing is successful in terms on cograph/triples/proper color/LDT
+#			
+#			For cograph editing it only cares about minimal edits to cograph whereas the ILP
+#			edits a graph into a cograph such that R_G is maximal so if we compare the edit distance between ILP and cograph editing
+#			we dont get a proper comparison when they are both LDT graphs, because for cograph editing we could get an LDT graph back such that
+#			R_G is not maximal but still consistent.
+#
+#			Out of all triples edits (only insertion/deletion/both with n iterations), use one that performs best with cograph editing in an attempt
+#			to edit a graph into an LDT graph and benchmark this method.
+
+
+def generate_trees(n = 100, m = 10, model = 'innovation', dupl_rate = 0.5, loss_rate = 0.5, hgt_rate = 0.5, prohibit_extinction = "per_family", replace_prob = 0.0, size = 10):
+	i = 0
+	ID = find_next_ID('exact_solutions/trees/{}trees/'.format(size))
+	while i < n:
+		
+		S = te.simulate_species_tree(m, model= model)
+		TGT = te.simulate_dated_gene_tree(S, dupl_rate = dupl_rate, loss_rate = loss_rate, hgt_rate = hgt_rate, prohibit_extinction = prohibit_extinction, replace_prob = replace_prob)
+
+		OGT = te.observable_tree(TGT)
+		ldt = ldt_graph(OGT, S)
+		amount_nodes = len(ldt.nodes())
+		if amount_nodes == size:
+			# save trees
+			filename_species = 'exact_solutions/trees/{}trees/species_{}_{}_{}.json'.format(size, m, model, ID)
+			filename_gene	 = 'exact_solutions/trees/{}trees/gene_{}_{}_{}_{}_{}_{}.json'.format(size, dupl_rate, loss_rate, hgt_rate, prohibit_extinction, replace_prob, ID)
+			S.serialize(filename_species)
+			TGT.serialize(filename_gene)
+			ID += 1
+			i += 1
+
+def find_next_ID(filename):
+	'''
+		Finds the highest id of files in a given folder.
+		the ID is given last in the filename e.g _n.json where n is ID 
+	'''
+	# get all files in folder
+	existing_files = []
+
+	for _, _, files in os.walk(filename):
+		for file in files:
+			existing_files.append(file)
+
+	def find_ID(f):
+		# regex for finding numbers between '_' and '.' without including the 2 characters.
+		s = re.findall('(?<=\_)([0-9]*?)(?=\.)', f)
+		return int(s[0]) if s else -1
+
+	next_ID = 0
+	for f in existing_files:
+		ID = find_ID(f)
+		if ID >= next_ID:
+			next_ID = ID + 1
+	return next_ID
+
+
+
+# 'exact_solutions/trees/{}trees'
+def generate_solutions_fromTrees(n, filename):
+	# load species+gene trees
+	tree_files = []
+
+	for _, _, files in os.walk(filename):
+		for file in files:
+			existing_files.append(file)
+
+	for f in tree_files:
+		pass
+
+def generate_solutions_unique_species(n, i_p = 0.5, d_p = 0.5):
+	done = False
+	count = 0
+	while not done:
+		S = te.simulate_species_tree(10, model='innovation')
+		TGT = te.simulate_dated_gene_tree(S, dupl_rate = 0.5, loss_rate = 0.5, hgt_rate = 0.5, prohibit_extinction = "per_family", replace_prob=0.0)
+		OGT = te.observable_tree(TGT)
+		ldt = ldt_graph(OGT, S)
+		if len(ldt.nodes()) == n:	
+			IG = InvestigateGraph(ldt)
+			IG.perturb_graph(i_p, d_p)
+
+			solver = LDTEditor(IG._G_perturbed)
+			solver.build_model()
+			solver.optimize(time_limit=None)
+
+			sol_graph, sol_distance = solver.get_solution()
+
+			properly_colored = is_properly_colored(sol_graph)
+			cograph = is_cograph(sol_graph)
+			compatible = is_compatible(sol_graph)
+
+			edit_dist = gt.symmetric_diff(IG._G_perturbed, sol_graph)
+			print("Runtime: {}".format(solver.get_solve_time()))
+			if properly_colored and cograph and compatible:
+				print("Saving data...")
+				solver._save_ILP_data(IG._G_perturbed, sol_graph, solver.get_solve_time(), edit_dist, only_add=False, only_delete=False, filename="{}nodes/LDTEdit_exact_solution".format(n))
+			else:
+				print("No solution found!")
+			count += 1
+		if count == 100:
+			done = True
+
+
+
 def generate_solutions(n):
 	done = False
 	while not done:
@@ -215,18 +326,20 @@ def bar_dot_plot(c_f, t1_f, t2_f, t3_f, t4_f, m, n, initial_num_edges, exact_sol
 											t4_edge_count, t4_edit_dist, t4_is_ldt
 											):
 
-	X_bar = ["G1", "G2", "G3", "G4"]
+	X_bar = ["M1", "M2", "M3", "M4"]
 	X_axis = np.arange(len(X_bar))
 
+	# COLORS FOR ILP: 'green', INPUT GRAPH: 'brown'
+	# COLORS FOR EDITS: COGRAPH: 'blue', TE1: 'purple', TE2: '#1a9c79', TE3: 'red', TE4: 'orange'
 	# BAR PLOT
-	plt.bar(X_axis + 0.00, c_f, label = 'Cograph editing', width = 0.15)
-	plt.bar(X_axis + 0.15, t1_f, label = 'Triples editing 1', width = 0.15)
-	plt.bar(X_axis + 0.30, t2_f, label = 'Triples editing 2', width = 0.15)
-	plt.bar(X_axis + 0.45, t3_f, label = 'Triples editing 3', width = 0.15)
-	plt.bar(X_axis + 0.60, t4_f, label = 'Triples editing 4', width = 0.15)
+	plt.bar(X_axis + 0.00, c_f, label = 'Cograph editing', width = 0.15, color = 'blue')
+	plt.bar(X_axis + 0.15, t1_f, label = 'Triples editing (1)', width = 0.15, color = '#6a12b3')
+	plt.bar(X_axis + 0.30, t2_f, label = 'Triples editing (2)', width = 0.15, color = '#1a9c79')
+	plt.bar(X_axis + 0.45, t3_f, label = 'Triples editing (3)', width = 0.15, color = 'red')
+	plt.bar(X_axis + 0.60, t4_f, label = 'Triples editing (4)', width = 0.15, color = 'orange')
 
 	plt.xticks(X_axis, X_bar)
-	plt.title("Cograph vs triples editing on {} perturbed graphs with {} nodes".format(m, n))
+	plt.title("Cograph and triples editing on {} perturbed graphs with {} nodes".format(m, n))
 	plt.ylim(0.1, 2.0)
 	plt.legend()
 	plt.show()
@@ -254,16 +367,18 @@ def bar_dot_plot(c_f, t1_f, t2_f, t3_f, t4_f, m, n, initial_num_edges, exact_sol
 	# DOT PLOT (EDGE COUNT)
 	plt.subplot(211)
 	plt.rcParams["figure.figsize"] = (15, 5)
-	
-	plt.plot(x, y_exact_sol_edge_count, 's', color='green', label = 'exact solution graph')
-	plt.plot(x, y_init_edge_count, 'o', color='brown', label = 'input graph')
-	plt.plot(x, y_c_edge_count, 'o', color='black', label = 'cograph edited LDT-graph')
-	plt.plot(x, y_t1_edge_count, 'o', color='purple', label = 'triples edited (1) LDT-graph')
-	plt.plot(x, y_t2_edge_count, 'o', color='pink', label = 'triples edited (2) LDT-graph')
-	plt.plot(x, y_t3_edge_count, 'o', color='red', label = 'triples edited (3) LDT-graph')
-	plt.plot(x, y_t4_edge_count, 'o', color='orange', label = 'triples edited (4) LDT-graph')
 
-	plt.title("Edge count of input graph and edited LDT-graphs    {} nodes".format(n))
+	
+	
+	plt.plot(x, y_exact_sol_edge_count, 'D', color='green', label = 'ILP editing (exact solution)')
+	plt.plot(x, y_init_edge_count, 'X', color='brown', label = 'Input graph')
+	plt.plot(x, y_c_edge_count, 's', color='blue', label = 'Cograph editing')
+	plt.plot(x, y_t1_edge_count, 'v', markersize=9, color='#6a12b3', label = 'Triples editing (1)')
+	plt.plot(x, y_t2_edge_count, '^', color='#067d63', label = 'Triples editing (2)')
+	plt.plot(x, y_t3_edge_count, 'o', color='red', label = 'Triples editing (3)')
+	plt.plot(x, y_t4_edge_count, 'o', color='orange', label = 'Triples editing (4)')
+
+	plt.title("Edge count of input graph ({} nodes) and resulting LDT-graphs of applied heuristics.".format(n))
 	plt.xticks(np.arange(min(x), max(x)+1, 2.0))
 	plt.ylabel("edge count")
 	plt.xlabel("graph No.")
@@ -279,14 +394,14 @@ def bar_dot_plot(c_f, t1_f, t2_f, t3_f, t4_f, m, n, initial_num_edges, exact_sol
 
 	# DOT PLOT (EDIT DISTANCE)
 	plt.subplot(212)
-	plt.plot(x, y_min_edit_dist, 's', color='green', label = 'exact solution graph')
-	plt.plot(x, y_c_edit_dist, 'o', color='black', label = 'cograph edited LDT-graph')
-	plt.plot(x, y_t1_edit_dist, 'o', color='purple', label = 'triples edited (1) LDT-graph')
-	plt.plot(x, y_t2_edit_dist, 'o', color='pink', label = 'triples edited (2) LDT-graph')
-	plt.plot(x, y_t3_edit_dist, 'o', color='red', label = 'triples edited (3) LDT-graph')
-	plt.plot(x, y_t4_edit_dist, 'o', color='orange', label = 'triples edited (4) LDT-graph')
+	plt.plot(x, y_min_edit_dist, 'D', color='green', label = 'ILP editing (minimum edit distance)')
+	plt.plot(x, y_c_edit_dist, 's', color='blue', label = 'Cograph editing')
+	plt.plot(x, y_t1_edit_dist, 'v', markersize=9, color='#6a12b3', label = 'Triples editing (1)')
+	plt.plot(x, y_t2_edit_dist, '^', color='#067d63', label = 'Triples editing (2)')
+	plt.plot(x, y_t3_edit_dist, 'o', color='red', label = 'Triples editing (3)')
+	plt.plot(x, y_t4_edit_dist, 'o', color='orange', label = 'Triples editing (4)')
 
-	plt.title("min edit distance compared to edit distance of edited LDT-graphs    {} nodes".format(n))
+	plt.title("Minimum edit distance to an LDT-graph from the input graph ({} nodes), compared to edit distances of resulting LDT-graphs of applied heuristics.".format(n))
 	plt.xticks(np.arange(min(x), max(x)+1, 2.0))
 	plt.ylabel("edit distance (symmetric difference)")
 	plt.xlabel("graph No.")
@@ -389,5 +504,13 @@ def benchmark(n):
 
 		
 
-benchmark(20)
-#generate_solutions(20)
+#benchmark(20)
+#generate_solutions(8)
+
+#generate_trees(n = 100, m = 10, model = 'innovation', dupl_rate = 0.5, loss_rate = 0.5, hgt_rate = 0.5, prohibit_extinction = "per_family", replace_prob = 0.0, size = 18)
+
+
+
+
+
+# (n = 100, m = 10, model = 'innovation', dupl_rate = 0.5, loss_rate = 0.5, hgt_rate = 0.5, prohibit_extinction = "per_family", replace_prob = 0.0, size = 10)
