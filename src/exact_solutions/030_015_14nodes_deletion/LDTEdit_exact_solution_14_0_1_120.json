@@ -1,0 +1,335 @@
+{
+      "solve_time": 4.620550155639648,
+      "n": 14,
+      "only_add": false,
+      "only_delete": true,
+      "min_edit_dist": 12.0,
+      "insert_p": 0.3,
+      "delete_p": 0.15,
+      "G": {
+            "directed": false,
+            "multigraph": false,
+            "graph": {},
+            "nodes": [
+                  {
+                        "label": "6",
+                        "color": 8,
+                        "id": 6
+                  },
+                  {
+                        "label": "7",
+                        "color": 8,
+                        "id": 7
+                  },
+                  {
+                        "label": "12",
+                        "color": 11,
+                        "id": 12
+                  },
+                  {
+                        "label": "22",
+                        "color": 11,
+                        "id": 22
+                  },
+                  {
+                        "label": "23",
+                        "color": 11,
+                        "id": 23
+                  },
+                  {
+                        "label": "26",
+                        "color": 18,
+                        "id": 26
+                  },
+                  {
+                        "label": "27",
+                        "color": 19,
+                        "id": 27
+                  },
+                  {
+                        "label": "28",
+                        "color": 16,
+                        "id": 28
+                  },
+                  {
+                        "label": "29",
+                        "color": 18,
+                        "id": 29
+                  },
+                  {
+                        "label": "21",
+                        "color": 15,
+                        "id": 21
+                  },
+                  {
+                        "label": "16",
+                        "color": 12,
+                        "id": 16
+                  },
+                  {
+                        "label": "18",
+                        "color": 6,
+                        "id": 18
+                  },
+                  {
+                        "label": "19",
+                        "color": 7,
+                        "id": 19
+                  },
+                  {
+                        "label": "9",
+                        "color": 5,
+                        "id": 9
+                  }
+            ],
+            "links": [
+                  {
+                        "source": 6,
+                        "target": 12
+                  },
+                  {
+                        "source": 6,
+                        "target": 22
+                  },
+                  {
+                        "source": 6,
+                        "target": 28
+                  },
+                  {
+                        "source": 7,
+                        "target": 12
+                  },
+                  {
+                        "source": 7,
+                        "target": 26
+                  },
+                  {
+                        "source": 7,
+                        "target": 16
+                  },
+                  {
+                        "source": 7,
+                        "target": 18
+                  },
+                  {
+                        "source": 7,
+                        "target": 19
+                  },
+                  {
+                        "source": 12,
+                        "target": 28
+                  },
+                  {
+                        "source": 12,
+                        "target": 21
+                  },
+                  {
+                        "source": 12,
+                        "target": 16
+                  },
+                  {
+                        "source": 22,
+                        "target": 21
+                  },
+                  {
+                        "source": 23,
+                        "target": 27
+                  },
+                  {
+                        "source": 26,
+                        "target": 21
+                  },
+                  {
+                        "source": 27,
+                        "target": 21
+                  },
+                  {
+                        "source": 27,
+                        "target": 18
+                  },
+                  {
+                        "source": 27,
+                        "target": 19
+                  },
+                  {
+                        "source": 27,
+                        "target": 9
+                  },
+                  {
+                        "source": 28,
+                        "target": 16
+                  },
+                  {
+                        "source": 28,
+                        "target": 9
+                  },
+                  {
+                        "source": 29,
+                        "target": 9
+                  },
+                  {
+                        "source": 21,
+                        "target": 19
+                  },
+                  {
+                        "source": 16,
+                        "target": 18
+                  },
+                  {
+                        "source": 16,
+                        "target": 19
+                  },
+                  {
+                        "source": 16,
+                        "target": 9
+                  },
+                  {
+                        "source": 18,
+                        "target": 9
+                  },
+                  {
+                        "source": 19,
+                        "target": 9
+                  }
+            ]
+      },
+      "edited_G": {
+            "directed": false,
+            "multigraph": false,
+            "graph": {},
+            "nodes": [
+                  {
+                        "label": "6",
+                        "color": 8,
+                        "id": 6
+                  },
+                  {
+                        "label": "7",
+                        "color": 8,
+                        "id": 7
+                  },
+                  {
+                        "label": "12",
+                        "color": 11,
+                        "id": 12
+                  },
+                  {
+                        "label": "22",
+                        "color": 11,
+                        "id": 22
+                  },
+                  {
+                        "label": "23",
+                        "color": 11,
+                        "id": 23
+                  },
+                  {
+                        "label": "26",
+                        "color": 18,
+                        "id": 26
+                  },
+                  {
+                        "label": "27",
+                        "color": 19,
+                        "id": 27
+                  },
+                  {
+                        "label": "28",
+                        "color": 16,
+                        "id": 28
+                  },
+                  {
+                        "label": "29",
+                        "color": 18,
+                        "id": 29
+                  },
+                  {
+                        "label": "21",
+                        "color": 15,
+                        "id": 21
+                  },
+                  {
+                        "label": "16",
+                        "color": 12,
+                        "id": 16
+                  },
+                  {
+                        "label": "18",
+                        "color": 6,
+                        "id": 18
+                  },
+                  {
+                        "label": "19",
+                        "color": 7,
+                        "id": 19
+                  },
+                  {
+                        "label": "9",
+                        "color": 5,
+                        "id": 9
+                  }
+            ],
+            "links": [
+                  {
+                        "source": 6,
+                        "target": 12
+                  },
+                  {
+                        "source": 6,
+                        "target": 22
+                  },
+                  {
+                        "source": 7,
+                        "target": 26
+                  },
+                  {
+                        "source": 12,
+                        "target": 21
+                  },
+                  {
+                        "source": 22,
+                        "target": 21
+                  },
+                  {
+                        "source": 27,
+                        "target": 18
+                  },
+                  {
+                        "source": 27,
+                        "target": 19
+                  },
+                  {
+                        "source": 27,
+                        "target": 9
+                  },
+                  {
+                        "source": 28,
+                        "target": 9
+                  },
+                  {
+                        "source": 29,
+                        "target": 9
+                  },
+                  {
+                        "source": 16,
+                        "target": 18
+                  },
+                  {
+                        "source": 16,
+                        "target": 19
+                  },
+                  {
+                        "source": 16,
+                        "target": 9
+                  },
+                  {
+                        "source": 18,
+                        "target": 9
+                  },
+                  {
+                        "source": 19,
+                        "target": 9
+                  }
+            ]
+      }
+}

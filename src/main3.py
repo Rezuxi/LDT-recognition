@@ -218,9 +218,10 @@ def cograph_editing(IG):
 
 
 def LDT_editing(IG, n = 1, deletion = False, insertion = False):
-	triples_edited_G, _ = self.triples_editing(n = n, deletion = d, insertion = i)
+	IG._count_not_ldt += 1
+	triples_edited_G, _ = IG.triples_editing(n = n, deletion = deletion, insertion = insertion)
 	is_properly_colored = True
-	if (d ^ i):
+	if (deletion ^ insertion):
 		# only insert or delete so we are sure to make G consistent.
 		isConsistent = True
 	else:
@@ -228,18 +229,285 @@ def LDT_editing(IG, n = 1, deletion = False, insertion = False):
 	isCograph = is_cograph(triples_edited_G)
 
 	if not isCograph:
-		cograph_edited_G = self.cograph_editing(G = triples_edited_G)
+		cograph_edited_G = IG.cograph_editing(G = triples_edited_G)
 	else:
-		print("Triples editing -> LDT")
-		return triples_edited_G
+		IG._count_ldtEdit_success += 1
+		edges_remaining = len(triples_edited_G.edges())
+		edit_dist = gt.symmetric_diff(IG._G_perturbed, triples_edited_G)
+		return triples_edited_G, True, edges_remaining, edit_dist
+		
 
-	color_graph(self._G, cograph_edited_G)
+	color_graph(IG._G, cograph_edited_G)
 	properClrd_cograph = make_properly_colored(cograph_edited_G)
 	isCograph = is_cograph(properClrd_cograph)
 	isConsistent = is_compatible(properClrd_cograph)
 	if isConsistent and isCograph:
-		return properClrd_cograph
-	return None
+		IG._count_ldtEdit_success += 1
+		edges_remaining = len(properClrd_cograph.edges())
+		edit_dist = gt.symmetric_diff(IG._G_perturbed, properClrd_cograph)
+		return properClrd_cograph, True, edges_remaining, edit_dist
+	return None, False, None, None
 
+def get_freq(G):
+	# frequency of cograph editing turning the graph into a cograph
+	if G._count_dG_not_cograph > 0:
+		cograph_f1 = G._count_cographEdit_success / G._count_dG_not_cograph
+	else:
+		cograph_f1 = -0.1
+
+	# frequency of cograph editing making the set of triples consistent. that is, the set of triples goes from inconsistent to consistent as a result of cograph editing.
+	if G._count_dG_notCograph_notConsistent > 0:
+		cograph_f2 = G._count_cographEdit_fixed_consistency/G._count_dG_notCograph_notConsistent
+	else:
+		cograph_f2 = -0.1
+
+	# frequency of the graph remaining properly colored after cograph editing.
+	if G._count_dG_not_cograph > 0:
+		cograph_f3 = G._count_cographEdit_remain_properly_colored / G._count_dG_not_cograph
+	else:
+		cograph_f3 = -0.1
+
+	# frequency of cograph editing turning the graph into an LDT-graph
+	if G._count_dG_not_cograph > 0:
+		cograph_f4 = G._count_cographEdit_to_LDT / G._count_dG_not_cograph
+	else:
+		cograph_f4 = -0.1
+
+
+
+	# frequency of triples editing turning the graph into a cograph.
+	if G._count_dG_notCograph_notConsistent > 0:
+		triples_f1 = G._count_triplesEdit_fixed_cograph / G._count_dG_notCograph_notConsistent
+	else:
+		triples_f1 = -0.1
+
+	# frequency of triples editing making the set of triples consistent.
+	if G._count_dG_not_consistent > 0:
+		triples_f2 = G._count_triplesEdit_success / G._count_dG_not_consistent
+	else:
+		triples_f2 = -0.1
+
+	# frequency of the graph remaining properly colored after triples editing.
+	if G._count_dG_not_consistent > 0:
+		triples_f3 = G._count_triplesEdit_remain_properly_colored / G._count_dG_not_consistent
+	else:
+		triples_f3 = -0.1
+
+	# frequency of triples editing turning the graph into an LDT-graph.
+	if G._count_dG_not_consistent > 0:
+		triples_f4 = G._count_triplesEdit_to_LDT / G._count_dG_not_consistent
+	else:
+		triples_f4 = -0.1
+
+	# for ldt editing we're only interested in how often we get an ldt graph.
+	if G._count_not_ldt > 0:
+		ldt_f = G._count_ldtEdit_success / G._count_not_ldt
+	else:
+		ldt_f = -0.1
+
+
+	triples_values = [triples_f1, triples_f2, triples_f3, triples_f4]
+	cograph_values = [cograph_f1, cograph_f2, cograph_f3, cograph_f4]
+	ldt_values 	   = [-0.1, -0.1, -0.1, ldt_f]
+	#ldt_values	   = []
+	
+	return triples_values, cograph_values, ldt_values
+
+def get_ratios(min_dist, edit_dist):
+	ratios = []
+	for i in range(len(min_dist)):
+		if edit_dist[i]:
+			ratios.append(edit_dist[i]/min_dist[i])
+	return ratios
+
+def box_plots(ldt_edit_distances, cograph_edit_distances, t1_edit_distances, t2_edit_distances, t3_edit_distances):
+
+	data = [ldt_edit_distances, cograph_edit_distances, t1_edit_distances, t2_edit_distances, t3_edit_distances]
+	labels = ['LDT editing', 'cograph editing', 'triples editing', 'triples editing (deletion)', 'triples editing (insertion)']
+
+	#fig = plt.figure(figsize =(10, 7))
+	
+	# Creating plot
+	#plt.boxplot(ldt_edit_distances)
+	#plt.boxplot(cograph_edit_distances)
+	#plt.boxplot(t1_edit_distances)
+	#plt.boxplot(t2_edit_distances)
+	#plt.boxplot(t3_edit_distances)
+	plt.title("Ratio between edit distance and minimum edit distance for each heuristic.")
+	plt.ylabel("ratio between edit distance and minimum edit distance")
+	plt.xlabel("Different heuristics")
+	plt.boxplot(data, positions = np.array(range(len(labels)))*2.0-0.4, sym='', widths=0.6)
+	plt.xticks(range(0, len(labels) * 2, 2), labels, rotation=30)
+	# show plot
+	plt.show()
+
+def bar_plots(n, p, cograph_f, t1_f, t2_f, t3_f, ldt_f):
+	S1 = "$G^*$ became a cograph"
+	S2 = "$R_{G^*}$ became consistent"
+	S3 = "$G^*$ remained properly colored"
+	S4 = "$G^*$ became an LDT-graph"
+
+	X_bar = [S1, S2, S3, S4]
+	X_axis = np.arange(len(X_bar))
+	f_size = 18
+	#plt.figure(figsize =(7, 5))
+	# Y axis : Frequency
+	# X axis : G* -> cograph, R_G* -> consistent, G* properly colored, G* -> LDT
+
+	# COLORS FOR ILP: 'green', INPUT GRAPH: 'brown'
+	# COLORS FOR EDITS: COGRAPH: 'blue', TE1: 'purple', TE2: '#1a9c79', TE3: 'red', TE4: 'orange'
+	# BAR PLOT
+	
+	plt.bar(X_axis + 0.00, cograph_f, label = 'cograph editing', width = 0.15, color = 'blue')
+	plt.bar(X_axis + 0.15, t1_f, label = 'Triples editing', width = 0.15, color = '#1a9c79')
+	plt.bar(X_axis + 0.30, t2_f, label = 'Triples editing (deletion)', width = 0.15, color = '#6a12b3')
+	plt.bar(X_axis + 0.45, t3_f, label = 'Triples editing (insertion)', width = 0.15, color = 'red')
+	plt.bar(X_axis + 0.60, ldt_f, label = 'LDT editing', width = 0.15, color = 'orange')
+	
+	
+	
+	plt.ylabel("frequency", fontsize=f_size)
+	plt.xticks(X_axis, X_bar, rotation = 30, fontsize=f_size)
+	plt.title("different heuristics applied to 100 perturbed lDT-graphs with {} vertices. These graphs were perturbed with $p=({}, {})$.".format(n, p, p), fontsize = f_size)
+	plt.ylim(0.0, 1.0)
+	plt.legend(bbox_to_anchor=(1.00, 1.00), loc="upper left", borderaxespad=0, prop={'size': 12}, fontsize=f_size)
+	#plt.legend()
+	plt.tight_layout()
+	plt.show()
+
+
+def benchamrk(n):
+	c1_graphs, c1_edge_count, c1_is_ldt, c1_edit_dist = ([] for i in range(4))	# cograph editing
+	t1_graphs, t1_edge_count, t1_is_ldt, t1_edit_dist = ([] for i in range(4))	# triples editing with both insertion/deletion
+	t2_graphs, t2_edge_count, t2_is_ldt, t2_edit_dist = ([] for i in range(4))	# triples editing with deletion only
+	t3_graphs, t3_edge_count, t3_is_ldt, t3_edit_dist = ([] for i in range(4))	# triples editing with insertion only
+	t4_graphs, t4_edge_count, t4_is_ldt, t4_edit_dist = ([] for i in range(4))	# ldt editing
+
+	init_edge_amounts = []
+	exact_sol_edge_amounts = []
+	exact_sol_min_dist = []
+
+	exact_sol_edge_amounts_del = []
+	exact_sol_min_dist_del = []
+
+	exact_sol_edge_amounts_ins = []
+	exact_sol_min_dist_ins = []
+
+	IG1 = None
+	files1 = os.listdir("exact_solutions/050_050_{}nodes".format(n))
+	files1_del = os.listdir("exact_solutions/050_050_{}nodes_deletion".format(n))
+	files1_ins = os.listdir("exact_solutions/050_050_{}nodes_insertion".format(n))
+
+	#files2 = os.listdir("exact_solutions/030_030_{}nodes".format(n))
+	#files2_del = os.listdir("exact_solutions/030_030_{}nodes_deletion".format(n))
+	#files2_ins = os.listdir("exact_solutions/030_030_{}nodes_insertion".format(n))
+
+	#files3 = os.listdir("exact_solutions/015_015_{}nodes".format(n))
+	#files3_del = os.listdir("exact_solutions/015_015_{}nodes_deletion".format(n))
+	#files3_ins = os.listdir("exact_solutions/015_015_{}nodes_insertion".format(n))
+
+	#len1 = len(files1)
+	#len2 = len(files2)
+	#len3 = len(files3)
+	#print(len1)
+	#print(len2)
+	#print(len3)
+
+	for i in range(100):
+		# G1 (perturbed graph is the same for these 3 lines G1=G2=G3)
+		G1, edited_G1, only_add1, only_delete1, min_edit_dist1 = LDTEditor.get_ILP_data("exact_solutions/050_050_{}nodes/".format(n) + files1[i])
+		G2, edited_G2, only_add2, only_delete2, min_edit_dist2 = LDTEditor.get_ILP_data("exact_solutions/050_050_{}nodes_deletion/".format(n) + files1_del[i])	
+		G3, edited_G3, only_add3, only_delete3, min_edit_dist3 = LDTEditor.get_ILP_data("exact_solutions/050_050_{}nodes_insertion/".format(n) + files1_ins[i])	
+
+		# use all editing methods on G1 
+		if not IG1:
+			IG1 = InvestigateGraph(edited_G1, disturbed_G = G1)
+			IG2 = copy.deepcopy(IG1)
+			IG3 = copy.deepcopy(IG1)
+			IG4 = copy.deepcopy(IG1)
+			IG5 = copy.deepcopy(IG1)
+		else:
+			IG1.set_perturbed_graph(G1)
+			IG1.set_G(edited_G1)
+
+			IG2.set_perturbed_graph(G1)
+			IG2.set_G(edited_G1)
+
+			IG3.set_perturbed_graph(G1)
+			IG3.set_G(edited_G1)
+
+			IG4.set_perturbed_graph(G1)
+			IG4.set_G(edited_G1)
+
+			IG5.set_perturbed_graph(G1)
+			IG5.set_G(edited_G1)
+
+		initial_num_edges = len(G1.edges())
+
+		exact_sol_num_edges = len(edited_G1.edges())
+		exact_sol_num_edges_deletion = len(edited_G2.edges())
+		exact_sol_num_edges_insertion = len(edited_G3.edges())
+
+		cograph_edited_G, is_c1_ldt, c1_num_edges, c1_ldt_edit_dist = cograph_editing(IG1)
+		triples1_edited_G, is_t1_ldt, t1_num_edges, t1_ldt_edit_dist = triples_editing(IG2, n = 100)
+		triples2_edited_G, is_t2_ldt, t2_num_edges, t2_ldt_edit_dist = triples_editing(IG3, deletion = True)
+		triples3_edited_G, is_t3_ldt, t3_num_edges, t3_ldt_edit_dist = triples_editing(IG4, insertion = True)
+		ldt_edited_G, is_t4_ldt, t4_num_edges, t4_ldt_edit_dist = LDT_editing(IG5, deletion = True)
+
+		init_edge_amounts.append(initial_num_edges)
+
+		exact_sol_min_dist.append(min_edit_dist1)
+		exact_sol_min_dist_del.append(min_edit_dist2)
+		exact_sol_min_dist_ins.append(min_edit_dist3)
+
+		
+		exact_sol_edge_amounts.append(exact_sol_num_edges)
+		exact_sol_edge_amounts_del.append(exact_sol_num_edges_deletion)
+		exact_sol_edge_amounts_ins.append(exact_sol_num_edges_insertion)
+
+		c1_graphs.append(cograph_edited_G)
+		t1_graphs.append(triples1_edited_G)
+		t2_graphs.append(triples2_edited_G)
+		t3_graphs.append(triples3_edited_G)
+		t4_graphs.append(ldt_edited_G)
+
+		c1_is_ldt.append(is_c1_ldt)
+		t1_is_ldt.append(is_t1_ldt)
+		t2_is_ldt.append(is_t2_ldt)
+		t3_is_ldt.append(is_t3_ldt)
+		t4_is_ldt.append(is_t4_ldt)
+
+		c1_edge_count.append(c1_num_edges)
+		t1_edge_count.append(t1_num_edges)
+		t2_edge_count.append(t2_num_edges)
+		t3_edge_count.append(t3_num_edges)
+		t4_edge_count.append(t4_num_edges)
+
+		c1_edit_dist.append(c1_ldt_edit_dist)
+		t1_edit_dist.append(t1_ldt_edit_dist)
+		t2_edit_dist.append(t2_ldt_edit_dist)
+		t3_edit_dist.append(t3_ldt_edit_dist)
+		t4_edit_dist.append(t4_ldt_edit_dist)
+
+	_,  cograph_freq, _			= get_freq(IG1)
+	triples1_freq, _, _			= get_freq(IG2)
+	triples2_freq, _, _			= get_freq(IG3)
+	triples3_freq, _, _			= get_freq(IG4)
+	_, 		_, 		ldt_freq 	= get_freq(IG5)
+
+	ldt_edit_ratios = get_ratios(exact_sol_min_dist, t4_edit_dist)
+	cograph_edit_ratios = get_ratios(exact_sol_min_dist, c1_edit_dist)
+	t1_edit_ratios = get_ratios(exact_sol_min_dist, t1_edit_dist)
+	t2_edit_ratios = get_ratios(exact_sol_min_dist_del, t2_edit_dist)
+	t3_edit_ratios = get_ratios(exact_sol_min_dist_ins, t3_edit_dist)
+
+	bar_plots(n, 0.50, cograph_freq, triples1_freq, triples2_freq, triples3_freq, ldt_freq)	# bar plots of frequencies of different heuristics.
+	#box_plots(ldt_edit_ratios, cograph_edit_ratios, t1_edit_ratios, t2_edit_ratios, t3_edit_ratios)	# box plots of ratios between edit distance and minimum edit distance
+	#box_plots()	# edit distance between edited G* (G* being ldt) and original ldt graph (pre perturbed)
+
+	# bar plot using frequencies
+	# box plots with either ratio between edit_dist / min_edit_dist OR just plain edit distances. In both cases we can include horizontal lines for min_dist for ins/del and both.
+	# with plain edit dist we cant rly compare to min edit dist unless we draw a line for each graph edited and even then we cant see which points correspond to which line.
 #generate_solutions_fromTrees(10, 'exact_solutions/trees')
 
+benchamrk(18)

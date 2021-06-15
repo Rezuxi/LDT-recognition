@@ -399,6 +399,7 @@ class InvestigateGraph:
 		self._count_triplesEdit_remained_cograph = 0
 		self._count_cographEdit_remained_consistent = 0
 
+		self._count_not_ldt = 0
 		self._count_ldtEdit_success = 0
 
 		# count how many times the disturbed graph is not a cograph and not consistent
@@ -571,7 +572,7 @@ class InvestigateGraph:
 		if not isCograph:
 			cograph_edited_G = self.cograph_editing(G = triples_edited_G)
 		else:
-			print("Triples editing -> LDT")
+			#print("Triples editing -> LDT")
 			return triples_edited_G
 
 		color_graph(self._G, cograph_edited_G)
