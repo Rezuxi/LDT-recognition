@@ -320,7 +320,7 @@ def get_ratios(min_dist, edit_dist):
 			ratios.append(edit_dist[i]/min_dist[i])
 	return ratios
 
-def box_plots(ldt_edit_distances, cograph_edit_distances, t1_edit_distances, t2_edit_distances, t3_edit_distances):
+def box_plots(n, p1, p2, ldt_edit_distances, cograph_edit_distances, t1_edit_distances, t2_edit_distances, t3_edit_distances):
 
 	data = [ldt_edit_distances, cograph_edit_distances, t1_edit_distances, t2_edit_distances, t3_edit_distances]
 	labels = ['LDT editing', 'cograph editing', 'triples editing', 'triples editing (deletion)', 'triples editing (insertion)']
@@ -336,12 +336,13 @@ def box_plots(ldt_edit_distances, cograph_edit_distances, t1_edit_distances, t2_
 	plt.title("Ratio between edit distance and minimum edit distance for each heuristic.")
 	plt.ylabel("ratio between edit distance and minimum edit distance")
 	plt.xlabel("Different heuristics")
-	plt.boxplot(data, positions = np.array(range(len(labels)))*2.0-0.4, sym='', widths=0.6)
+	plt.boxplot(data, positions = np.array(range(len(labels)))*2.0, sym='', widths=0.6)
 	plt.xticks(range(0, len(labels) * 2, 2), labels, rotation=30)
 	# show plot
+	plt.tight_layout()
 	plt.show()
 
-def bar_plots(n, p, cograph_f, t1_f, t2_f, t3_f, ldt_f):
+def bar_plots(n, p1, p2, cograph_f, t1_f, t2_f, t3_f, ldt_f):
 	S1 = "$G^*$ became a cograph"
 	S2 = "$R_{G^*}$ became consistent"
 	S3 = "$G^*$ remained properly colored"
@@ -362,13 +363,13 @@ def bar_plots(n, p, cograph_f, t1_f, t2_f, t3_f, ldt_f):
 	plt.bar(X_axis + 0.15, t1_f, label = 'Triples editing', width = 0.15, color = '#1a9c79')
 	plt.bar(X_axis + 0.30, t2_f, label = 'Triples editing (deletion)', width = 0.15, color = '#6a12b3')
 	plt.bar(X_axis + 0.45, t3_f, label = 'Triples editing (insertion)', width = 0.15, color = 'red')
-	plt.bar(X_axis + 0.60, ldt_f, label = 'LDT editing', width = 0.15, color = 'orange')
+	#plt.bar(X_axis + 0.60, ldt_f, label = 'LDT editing', width = 0.15, color = 'orange')
 	
 	
 	
 	plt.ylabel("frequency", fontsize=f_size)
 	plt.xticks(X_axis, X_bar, rotation = 30, fontsize=f_size)
-	plt.title("different heuristics applied to 100 perturbed lDT-graphs with {} vertices. These graphs were perturbed with $p=({}, {})$.".format(n, p, p), fontsize = f_size)
+	plt.title("different heuristics applied to 100 perturbed lDT-graphs with {} vertices.\nThese graphs were perturbed with $p=({}, {})$.".format(n, p1, p2), fontsize = f_size)
 	plt.ylim(0.0, 1.0)
 	plt.legend(bbox_to_anchor=(1.00, 1.00), loc="upper left", borderaxespad=0, prop={'size': 12}, fontsize=f_size)
 	#plt.legend()
@@ -376,7 +377,124 @@ def bar_plots(n, p, cograph_f, t1_f, t2_f, t3_f, ldt_f):
 	plt.show()
 
 
-def benchamrk(n):
+# get ldt graphs and perturb with different probabilities and apply triples editing with insertion and deletion, then compare edge count
+
+def benchmarkLDTEdits(n, P1, P2):
+	p1 = str(P1).replace('.', '')
+	p1 = p1 + '0' if len(p1) == 2 else p1
+	
+	p2 = str(P2).replace('.', '')
+	p2 = p2 + '0' if len(p2) == 2 else p2
+
+	t1_graphs, t1_edge_count, t1_is_ldt, t1_edit_dist = ([] for i in range(4))	# ldt editing	
+	t2_graphs, t2_edge_count, t2_is_ldt, t2_edit_dist = ([] for i in range(4))	# ldt editing (triples edit deletion)
+	t3_graphs, t3_edge_count, t3_is_ldt, t3_edit_dist = ([] for i in range(4))	# ldt editing (triples edit insertion)		
+
+
+	files = os.listdir("exact_solutions/{}_{}_{}nodes".format(p1, p2, n))
+	files_del = os.listdir("exact_solutions/{}_{}_{}nodes_deletion".format(p1, p2, n))
+	files_ins = os.listdir("exact_solutions/{}_{}_{}nodes_insertion".format(p1, p2, n))
+
+	exact_sol_min_dist = []
+	exact_sol_min_dist_del = []
+	exact_sol_min_dist_ins = []
+
+
+	IG1 = None
+
+	for i in range(100):
+		# G1 (perturbed graph is the same for these 3 lines G1=G2=G3)
+		G1, edited_G1, only_add1, only_delete1, min_edit_dist1 = LDTEditor.get_ILP_data("exact_solutions/{}_{}_{}nodes/".format(p1, p2, n) + files[i])
+		G2, edited_G2, only_add2, only_delete2, min_edit_dist2 = LDTEditor.get_ILP_data("exact_solutions/{}_{}_{}nodes_deletion/".format(p1, p2, n) + files_del[i])	
+		G3, edited_G3, only_add3, only_delete3, min_edit_dist3 = LDTEditor.get_ILP_data("exact_solutions/{}_{}_{}nodes_insertion/".format(p1, p2, n) + files_ins[i])	
+		
+		if not IG1:
+			IG1 = InvestigateGraph(edited_G1, disturbed_G = G1)
+			IG2 = copy.deepcopy(IG1)
+			IG3 = copy.deepcopy(IG1)
+		else:
+			IG1.set_perturbed_graph(G1)
+			IG1.set_G(edited_G1)
+
+			IG2.set_perturbed_graph(G1)
+			IG2.set_G(edited_G1)
+
+			IG3.set_perturbed_graph(G1)
+			IG3.set_G(edited_G1)
+
+		t1_edited_G, is_t1_ldt, _, t1_ldt_edit_dist = LDT_editing(IG1, n=100)	# ldt editing with triples editing allowing both deletions and insertions for n = 100.
+		t2_edited_G, is_t2_ldt, _, t2_ldt_edit_dist = LDT_editing(IG2, deletion=True)	# ldt editing with triples editing allowing only deletions.
+		t3_edited_G, is_t3_ldt, _, t3_ldt_edit_dist = LDT_editing(IG3, insertion=True)	# ldt editing with triples editing allowing only insertions.
+		
+		t1_graphs.append(t1_edited_G)
+		t2_graphs.append(t2_edited_G)
+		t3_graphs.append(t3_edited_G)
+
+		t1_is_ldt.append(is_t1_ldt)
+		t2_is_ldt.append(is_t2_ldt)
+		t3_is_ldt.append(is_t3_ldt)
+
+		t1_edit_dist.append(t1_ldt_edit_dist)
+		t2_edit_dist.append(t2_ldt_edit_dist)
+		t3_edit_dist.append(t3_ldt_edit_dist)
+
+		exact_sol_min_dist.append(min_edit_dist1)
+		exact_sol_min_dist_del.append(min_edit_dist2)
+		exact_sol_min_dist_ins.append(min_edit_dist3)
+
+	# get frequencies
+	_, _, ldt1_freq				= get_freq(IG1)
+	_, _, ldt2_freq				= get_freq(IG2)
+	_, _, ldt3_freq				= get_freq(IG3)
+
+	# get ratios.
+	# we compare with min dist with no restrictions for all three methods since we only restrict triples editing to deletion/insertion
+	ldt1_edit_ratios = get_ratios(exact_sol_min_dist, t1_edit_dist)
+	ldt2_edit_ratios = get_ratios(exact_sol_min_dist, t2_edit_dist)	
+	ldt3_edit_ratios = get_ratios(exact_sol_min_dist, t3_edit_dist) 
+
+
+	
+	font_size = 18
+	bar_title = "Frequency of LDT editing (with different restrictions for triples editing)\nbeing successful on 100 perturbed LDT-graphs with {} vertices.".format(n) 
+	bar_title =	bar_title + "These graphs were perturbed with $p=({}, {})$.".format(P1, P2)
+	box_title = "Ratios $C_i/X_i$ for $i=1,...,100$ where $X_i$ is the (min) edit distance between $G_i$ and $G^{'}_i$\nand $C_i$ is the edit distance between $G^*_i$ and $G_i$."
+	box_title = box_title + "These graphs have {} vertices and were obtained by perturbing LDT-graphs with $p=({}, {})$.".format(n, P1, P2)
+	
+	y_label_bar = "Frequency"
+	y_label_box = "Ratio"
+
+	x_rotation = 30
+	x_ticks = ["LDT editing (i)", "LDT editing (ii)", "LDT editing (iii)"]
+
+	X_axis = np.arange(len(x_ticks))
+
+	# bar plot for frequency of ldt edits being successful
+	bar_data = [ldt1_freq[3], ldt2_freq[3], ldt3_freq[3]]
+	plt.title(bar_title, fontsize=font_size)
+	plt.ylabel(y_label_bar, fontsize=font_size)
+	plt.ylim(0.0, 1.0)
+	plt.xticks(X_axis, x_ticks, rotation = 30, fontsize=font_size)
+	plt.bar(x_ticks, bar_data, width=0.20)
+	#plt.bar(X_axis + 0.00, ldt1_freq[3], width = 0.15)
+	#plt.bar(X_axis + 0.15, ldt2_freq[3], width = 0.15)
+	#plt.bar(X_axis + 0.30, ldt3_freq[3], width = 0.15)
+	plt.tight_layout()
+	plt.show()
+
+	# box plot
+	box_data = [ldt1_edit_ratios, ldt2_edit_ratios, ldt3_edit_ratios]
+	plt.title(box_title, fontsize=font_size)
+	plt.ylabel(y_label_box, fontsize=font_size)
+	plt.boxplot(box_data, positions = np.array(range(len(x_ticks)))*2.0, sym='', widths=0.6)
+	plt.xticks(range(0, len(x_ticks) * 2, 2), x_ticks, rotation=30, fontsize=font_size)
+	plt.tight_layout()
+	plt.show()
+	
+
+	
+
+def benchmark(n, p1, p2):
 	c1_graphs, c1_edge_count, c1_is_ldt, c1_edit_dist = ([] for i in range(4))	# cograph editing
 	t1_graphs, t1_edge_count, t1_is_ldt, t1_edit_dist = ([] for i in range(4))	# triples editing with both insertion/deletion
 	t2_graphs, t2_edge_count, t2_is_ldt, t2_edit_dist = ([] for i in range(4))	# triples editing with deletion only
@@ -394,13 +512,13 @@ def benchamrk(n):
 	exact_sol_min_dist_ins = []
 
 	IG1 = None
-	files1 = os.listdir("exact_solutions/050_050_{}nodes".format(n))
-	files1_del = os.listdir("exact_solutions/050_050_{}nodes_deletion".format(n))
-	files1_ins = os.listdir("exact_solutions/050_050_{}nodes_insertion".format(n))
+	#files1 = os.listdir("exact_solutions/050_050_{}nodes".format(n))
+	#files1_del = os.listdir("exact_solutions/050_050_{}nodes_deletion".format(n))
+	#files1_ins = os.listdir("exact_solutions/050_050_{}nodes_insertion".format(n))
 
-	#files2 = os.listdir("exact_solutions/030_030_{}nodes".format(n))
-	#files2_del = os.listdir("exact_solutions/030_030_{}nodes_deletion".format(n))
-	#files2_ins = os.listdir("exact_solutions/030_030_{}nodes_insertion".format(n))
+	files1 = os.listdir("exact_solutions/{}_{}_{}nodes".format(p1, p2, n))
+	files1_del = os.listdir("exact_solutions/{}_{}_{}nodes_deletion".format(p1, p2, n))
+	files1_ins = os.listdir("exact_solutions/{}_{}_{}nodes_insertion".format(p1, p2, n))
 
 	#files3 = os.listdir("exact_solutions/015_015_{}nodes".format(n))
 	#files3_del = os.listdir("exact_solutions/015_015_{}nodes_deletion".format(n))
@@ -415,9 +533,9 @@ def benchamrk(n):
 
 	for i in range(100):
 		# G1 (perturbed graph is the same for these 3 lines G1=G2=G3)
-		G1, edited_G1, only_add1, only_delete1, min_edit_dist1 = LDTEditor.get_ILP_data("exact_solutions/050_050_{}nodes/".format(n) + files1[i])
-		G2, edited_G2, only_add2, only_delete2, min_edit_dist2 = LDTEditor.get_ILP_data("exact_solutions/050_050_{}nodes_deletion/".format(n) + files1_del[i])	
-		G3, edited_G3, only_add3, only_delete3, min_edit_dist3 = LDTEditor.get_ILP_data("exact_solutions/050_050_{}nodes_insertion/".format(n) + files1_ins[i])	
+		G1, edited_G1, only_add1, only_delete1, min_edit_dist1 = LDTEditor.get_ILP_data("exact_solutions/{}_{}_{}nodes/".format(p1, p2, n) + files1[i])
+		G2, edited_G2, only_add2, only_delete2, min_edit_dist2 = LDTEditor.get_ILP_data("exact_solutions/{}_{}_{}nodes_deletion/".format(p1, p2, n) + files1_del[i])	
+		G3, edited_G3, only_add3, only_delete3, min_edit_dist3 = LDTEditor.get_ILP_data("exact_solutions/{}_{}_{}nodes_insertion/".format(p1, p2, n) + files1_ins[i])	
 
 		# use all editing methods on G1 
 		if not IG1:
@@ -501,8 +619,8 @@ def benchamrk(n):
 	t2_edit_ratios = get_ratios(exact_sol_min_dist_del, t2_edit_dist)
 	t3_edit_ratios = get_ratios(exact_sol_min_dist_ins, t3_edit_dist)
 
-	bar_plots(n, 0.50, cograph_freq, triples1_freq, triples2_freq, triples3_freq, ldt_freq)	# bar plots of frequencies of different heuristics.
-	#box_plots(ldt_edit_ratios, cograph_edit_ratios, t1_edit_ratios, t2_edit_ratios, t3_edit_ratios)	# box plots of ratios between edit distance and minimum edit distance
+	#bar_plots(n, 0.15, 0.15, cograph_freq, triples1_freq, triples2_freq, triples3_freq, ldt_freq)	# bar plots of frequencies of different heuristics.
+	box_plots(10, 0.15, 0.15, ldt_edit_ratios, cograph_edit_ratios, t1_edit_ratios, t2_edit_ratios, t3_edit_ratios)	# box plots of ratios between edit distance and minimum edit distance
 	#box_plots()	# edit distance between edited G* (G* being ldt) and original ldt graph (pre perturbed)
 
 	# bar plot using frequencies
@@ -510,4 +628,7 @@ def benchamrk(n):
 	# with plain edit dist we cant rly compare to min edit dist unless we draw a line for each graph edited and even then we cant see which points correspond to which line.
 #generate_solutions_fromTrees(10, 'exact_solutions/trees')
 
-benchamrk(18)
+#benchmark(18, '015', '015')
+#benchmark(14)
+#benchmark(18)
+benchmarkLDTEdits(18, 0.50, 0.15)
