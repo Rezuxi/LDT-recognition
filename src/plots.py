@@ -278,7 +278,7 @@ def benchmarkLDTEdits(n, P1, P2):
 	
 
 
-def barPlots(ls):
+def barPlots(ls, n_values=[10, 14, 18]):
 	ticks = ['LDT editing (i)', 'LDT editing (ii)', 'LDT editing (iii)']
 	#x_pos = np.arange(len(ticks))	# set step to increase distance between x ticks
 	x_pos = [0, 0.6, 1.2]
@@ -292,7 +292,7 @@ def barPlots(ls):
 		m = max(ls)
 		data = ls[i] # all data for n vertices
 		#axs[i].title.set_text('$n={}$'.format(10+4*i))
-		axs[i].set_title('$n={}$'.format(10+4*i), fontsize=18)#, horizontalalignment='left', x=0.15)
+		axs[i].set_title('$n={}$'.format(n_values[i]), fontsize=18)#, horizontalalignment='left', x=0.15)
 		axs[i].set_ylim(0, 1)
 		axs[i].set_ylabel('Frequency', fontsize=16, weight='bold', labelpad=10, fontfamily='cursive')
 		#axs[i].tick_params(axis='y', which='major', pad=10)
@@ -498,29 +498,29 @@ def main():
 
 
 def main2():
-	f1 = benchmark_fromTrees(10, 0.15, 0.15)
-	f2 = benchmark_fromTrees(10, 0.3, 0.3)
-	f3 = benchmark_fromTrees(10, 0.5, 0.5)
-	f4 = benchmark_fromTrees(10, 0.15, 0.5)
-	f5 = benchmark_fromTrees(10, 0.5, 0.15)
+	f1 = benchmark_fromTrees(30, 0.15, 0.15)
+	f2 = benchmark_fromTrees(30, 0.3, 0.3)
+	f3 = benchmark_fromTrees(30, 0.5, 0.5)
+	f4 = benchmark_fromTrees(30, 0.15, 0.5)
+	f5 = benchmark_fromTrees(30, 0.5, 0.15)
 
-	f6 = benchmark_fromTrees(10, 0.15, 0.15)
-	f7 = benchmark_fromTrees(10, 0.3, 0.3)
-	f8 = benchmark_fromTrees(10, 0.5, 0.5)
-	f9 = benchmark_fromTrees(10, 0.15, 0.5)
-	f10 = benchmark_fromTrees(10, 0.5, 0.15)
+	f6 = benchmark_fromTrees(40, 0.15, 0.15)
+	f7 = benchmark_fromTrees(40, 0.3, 0.3)
+	f8 = benchmark_fromTrees(40, 0.5, 0.5)
+	f9 = benchmark_fromTrees(40, 0.15, 0.5)
+	f10 = benchmark_fromTrees(40, 0.5, 0.15)
 
-	f11 = benchmark_fromTrees(10, 0.15, 0.15)
-	f12 = benchmark_fromTrees(10, 0.3, 0.3)
-	f13 = benchmark_fromTrees(10, 0.5, 0.5)
-	f14 = benchmark_fromTrees(10, 0.15, 0.5)
-	f15 = benchmark_fromTrees(10, 0.5, 0.15)
+	f11 = benchmark_fromTrees(50, 0.15, 0.15)
+	f12 = benchmark_fromTrees(50, 0.3, 0.3)
+	f13 = benchmark_fromTrees(50, 0.5, 0.5)
+	f14 = benchmark_fromTrees(50, 0.15, 0.5)
+	f15 = benchmark_fromTrees(50, 0.5, 0.15)
 
 	freqs1 = [f1, f2, f3, f4, f5]
 	freqs2 = [f5, f6, f7, f9, f10]
 	freqs3 = [f11, f12, f13, f14, f15]
 	all_freqs = [freqs1, freqs2, freqs3]
 	
-	barPlots(all_freqs)
+	barPlots(all_freqs, n_values=[])
 
 #main()
