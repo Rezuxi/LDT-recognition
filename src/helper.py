@@ -34,7 +34,15 @@ import matplotlib.pyplot as plt
 
 def generate_trees(n = 100, m = 10, model = 'innovation', dupl_rate = 0.5, loss_rate = 0.5, hgt_rate = 0.5, prohibit_extinction = "per_family", replace_prob = 0.0, size = 10):
 	i = 0
-	ID = find_next_ID('exact_solutions/trees/{}trees/'.format(size))
+	dirName = 'exact_solutions/trees/{}trees'.format(size)
+	# create folder if it doesnt exist
+	if not os.path.exists(dirName):
+		os.makedirs(dirName)
+		ID = 0
+	else:
+		ID = find_next_ID('exact_solutions/trees/{}trees/'.format(size))
+	
+
 	while i < n:
 		
 		S = te.simulate_species_tree(m, model= model)
@@ -514,3 +522,6 @@ def benchmark(n):
 
 
 # (n = 100, m = 10, model = 'innovation', dupl_rate = 0.5, loss_rate = 0.5, hgt_rate = 0.5, prohibit_extinction = "per_family", replace_prob = 0.0, size = 10)
+
+for i in range(20, 101, 10):
+	generate_trees(size=i)

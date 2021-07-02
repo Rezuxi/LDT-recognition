@@ -322,9 +322,11 @@ def get_ratios(min_dist, edit_dist):
 
 def box_plots(n, p1, p2, ldt_edit_distances, cograph_edit_distances, t1_edit_distances, t2_edit_distances, t3_edit_distances):
 
-	data = [ldt_edit_distances, cograph_edit_distances, t1_edit_distances, t2_edit_distances, t3_edit_distances]
-	labels = ['LDT editing', 'cograph editing', 'triples editing', 'triples editing (deletion)', 'triples editing (insertion)']
-
+	data = [cograph_edit_distances, t1_edit_distances, t2_edit_distances, t3_edit_distances]
+	labels = ['cograph editing', 'triples editing ($n=100$)', 'triples editing (deletion)', 'triples editing (insertion)']
+	f_size = 16
+	box_title = r"Ratios between $\dfrac{A_i}{X_i}$ for resulting LDT-graphs of cograph and triples editing."
+	box_title = box_title + "\nThe graphs these edits were applied to have {} vertices and were obtained by perturbing LDT-graphs with $p=({}, {})$.".format(n, p1, p2)
 	#fig = plt.figure(figsize =(10, 7))
 	
 	# Creating plot
@@ -333,14 +335,21 @@ def box_plots(n, p1, p2, ldt_edit_distances, cograph_edit_distances, t1_edit_dis
 	#plt.boxplot(t1_edit_distances)
 	#plt.boxplot(t2_edit_distances)
 	#plt.boxplot(t3_edit_distances)
-	plt.title("Ratio between edit distance and minimum edit distance for each heuristic.")
-	plt.ylabel("ratio between edit distance and minimum edit distance")
-	plt.xlabel("Different heuristics")
+	plt.title(box_title, fontsize=f_size)
+	plt.ylabel("Ratio", fontsize=f_size)
+	#plt.xlabel("Different heuristics")
 	plt.boxplot(data, positions = np.array(range(len(labels)))*2.0, sym='', widths=0.6)
-	plt.xticks(range(0, len(labels) * 2, 2), labels, rotation=30)
+	plt.xticks(range(0, len(labels) * 2, 2), labels, rotation=30, fontsize=f_size)
 	# show plot
 	plt.tight_layout()
-	plt.show()
+	#plt.show()
+	fig = plt.gcf()
+	fig.set_size_inches(18.5, 10.5)
+	fig.savefig('barplots/{}nodes_nonLDT_{}_{}.png'.format(n, p1, p2), dpi=100)
+	plt.clf()
+	fig.clear(True)
+	plt.close('all')
+	fig = None
 
 def bar_plots(n, p1, p2, cograph_f, t1_f, t2_f, t3_f, ldt_f):
 	S1 = "$G^*$ became a cograph"
@@ -350,7 +359,7 @@ def bar_plots(n, p1, p2, cograph_f, t1_f, t2_f, t3_f, ldt_f):
 
 	X_bar = [S1, S2, S3, S4]
 	X_axis = np.arange(len(X_bar))
-	f_size = 18
+	f_size = 16
 	#plt.figure(figsize =(7, 5))
 	# Y axis : Frequency
 	# X axis : G* -> cograph, R_G* -> consistent, G* properly colored, G* -> LDT
@@ -360,7 +369,7 @@ def bar_plots(n, p1, p2, cograph_f, t1_f, t2_f, t3_f, ldt_f):
 	# BAR PLOT
 	
 	plt.bar(X_axis + 0.00, cograph_f, label = 'cograph editing', width = 0.15, color = 'blue')
-	plt.bar(X_axis + 0.15, t1_f, label = 'Triples editing', width = 0.15, color = '#1a9c79')
+	plt.bar(X_axis + 0.15, t1_f, label = 'Triples editing ($n=100$)', width = 0.15, color = '#1a9c79')
 	plt.bar(X_axis + 0.30, t2_f, label = 'Triples editing (deletion)', width = 0.15, color = '#6a12b3')
 	plt.bar(X_axis + 0.45, t3_f, label = 'Triples editing (insertion)', width = 0.15, color = 'red')
 	#plt.bar(X_axis + 0.60, ldt_f, label = 'LDT editing', width = 0.15, color = 'orange')
@@ -369,12 +378,19 @@ def bar_plots(n, p1, p2, cograph_f, t1_f, t2_f, t3_f, ldt_f):
 	
 	plt.ylabel("frequency", fontsize=f_size)
 	plt.xticks(X_axis, X_bar, rotation = 30, fontsize=f_size)
-	plt.title("different heuristics applied to 100 perturbed lDT-graphs with {} vertices.\nThese graphs were perturbed with $p=({}, {})$.".format(n, p1, p2), fontsize = f_size)
+	plt.title("different heuristics applied to 100 perturbed LDT-graphs with {} vertices.\nThese graphs were perturbed with $p=({}, {})$.".format(n, p1, p2), fontsize = f_size)
 	plt.ylim(0.0, 1.0)
 	plt.legend(bbox_to_anchor=(1.00, 1.00), loc="upper left", borderaxespad=0, prop={'size': 12}, fontsize=f_size)
 	#plt.legend()
 	plt.tight_layout()
-	plt.show()
+	fig = plt.gcf()
+	fig.set_size_inches(18.5, 10.5)
+	fig.savefig('barplots/{}nodes_nonLDT_F_{}_{}.png'.format(n, p1, p2), dpi=100)
+	plt.clf()
+	fig.clear(True)
+	plt.close('all')
+	fig = None
+	#plt.show()
 
 
 # get ldt graphs and perturb with different probabilities and apply triples editing with insertion and deletion, then compare edge count
@@ -456,15 +472,16 @@ def benchmarkLDTEdits(n, P1, P2):
 
 	
 	font_size = 18
-	bar_title = "Frequency of LDT editing (with different restrictions for triples editing)\nbeing successful on 100 perturbed LDT-graphs with {} vertices.".format(n) 
+	bar_title = "Frequency of LDT editing (with different restrictions for triples editing) being successful\non 100 perturbed LDT-graphs with {} vertices.".format(n) 
 	bar_title =	bar_title + "These graphs were perturbed with $p=({}, {})$.".format(P1, P2)
-	box_title = "Ratios $C_i/X_i$ for $i=1,...,100$ where $X_i$ is the (min) edit distance between $G_i$ and $G^{'}_i$\nand $C_i$ is the edit distance between $G^*_i$ and $G_i$."
-	box_title = box_title + "These graphs have {} vertices and were obtained by perturbing LDT-graphs with $p=({}, {})$.".format(n, P1, P2)
+	
+	box_title = r"Ratios between $\frac{C_i}{X_i}$ for LDT editing with different restrictions for triples editing."
+	box_title = box_title + "\nThe graphs these edits are applied to have {} vertices and were obtained by perturbing LDT-graphs with $p=({}, {})$.".format(n, P1, P2)
 	
 	y_label_bar = "Frequency"
 	y_label_box = "Ratio"
 
-	x_rotation = 30
+	x_rotation = 0
 	x_ticks = ["LDT editing (i)", "LDT editing (ii)", "LDT editing (iii)"]
 
 	X_axis = np.arange(len(x_ticks))
@@ -474,27 +491,49 @@ def benchmarkLDTEdits(n, P1, P2):
 	plt.title(bar_title, fontsize=font_size)
 	plt.ylabel(y_label_bar, fontsize=font_size)
 	plt.ylim(0.0, 1.0)
-	plt.xticks(X_axis, x_ticks, rotation = 30, fontsize=font_size)
+	plt.xticks(X_axis, x_ticks, rotation = x_rotation, fontsize=font_size)
 	plt.bar(x_ticks, bar_data, width=0.20)
 	#plt.bar(X_axis + 0.00, ldt1_freq[3], width = 0.15)
 	#plt.bar(X_axis + 0.15, ldt2_freq[3], width = 0.15)
 	#plt.bar(X_axis + 0.30, ldt3_freq[3], width = 0.15)
 	plt.tight_layout()
-	plt.show()
-
+	#plt.show()
+	fig = plt.gcf()
+	fig.set_size_inches(18.5, 8.5)
+	fig.savefig('graphs/{}nodes_LDT_F_{}_{}.png'.format(n, p1, p2), dpi=100)
+	#clear
+	plt.clf()
+	fig.clear(True)
+	plt.close('all')
+	fig = None
+	#plt.close()
+	#fig.clear('all')
 	# box plot
 	box_data = [ldt1_edit_ratios, ldt2_edit_ratios, ldt3_edit_ratios]
 	plt.title(box_title, fontsize=font_size)
 	plt.ylabel(y_label_box, fontsize=font_size)
 	plt.boxplot(box_data, positions = np.array(range(len(x_ticks)))*2.0, sym='', widths=0.6)
-	plt.xticks(range(0, len(x_ticks) * 2, 2), x_ticks, rotation=30, fontsize=font_size)
+	plt.xticks(range(0, len(x_ticks) * 2, 2), x_ticks, rotation=x_rotation, fontsize=font_size)
 	plt.tight_layout()
-	plt.show()
+	fig = plt.gcf()
+	fig.set_size_inches(18.5, 10.5)
+	fig.savefig('graphs/{}nodes_LDT_{}_{}.png'.format(n, p1, p2), dpi=100)
+	#plt.show()
+	#clear
+	plt.clf()
+	fig.clear(True)
+	plt.close('all')
+	fig = None
 	
 
 	
 
-def benchmark(n, p1, p2):
+def benchmark(n, P1, P2):
+	p1 = str(P1).replace('.', '')
+	p1 = p1 + '0' if len(p1) == 2 else p1
+	
+	p2 = str(P2).replace('.', '')
+	p2 = p2 + '0' if len(p2) == 2 else p2
 	c1_graphs, c1_edge_count, c1_is_ldt, c1_edit_dist = ([] for i in range(4))	# cograph editing
 	t1_graphs, t1_edge_count, t1_is_ldt, t1_edit_dist = ([] for i in range(4))	# triples editing with both insertion/deletion
 	t2_graphs, t2_edge_count, t2_is_ldt, t2_edit_dist = ([] for i in range(4))	# triples editing with deletion only
@@ -619,8 +658,8 @@ def benchmark(n, p1, p2):
 	t2_edit_ratios = get_ratios(exact_sol_min_dist_del, t2_edit_dist)
 	t3_edit_ratios = get_ratios(exact_sol_min_dist_ins, t3_edit_dist)
 
-	#bar_plots(n, 0.15, 0.15, cograph_freq, triples1_freq, triples2_freq, triples3_freq, ldt_freq)	# bar plots of frequencies of different heuristics.
-	box_plots(10, 0.15, 0.15, ldt_edit_ratios, cograph_edit_ratios, t1_edit_ratios, t2_edit_ratios, t3_edit_ratios)	# box plots of ratios between edit distance and minimum edit distance
+	#bar_plots(n, P1, P2, cograph_freq, triples1_freq, triples2_freq, triples3_freq, ldt_freq)	# bar plots of frequencies of different heuristics.
+	box_plots(n, P1, P1, ldt_edit_ratios, cograph_edit_ratios, t1_edit_ratios, t2_edit_ratios, t3_edit_ratios)	# box plots of ratios between edit distance and minimum edit distance
 	#box_plots()	# edit distance between edited G* (G* being ldt) and original ldt graph (pre perturbed)
 
 	# bar plot using frequencies
@@ -631,4 +670,104 @@ def benchmark(n, p1, p2):
 #benchmark(18, '015', '015')
 #benchmark(14)
 #benchmark(18)
-benchmarkLDTEdits(18, 0.50, 0.15)
+#benchmarkLDTEdits(18, 0.50, 0.50)
+#benchmarkLDTEdits(18, 0.30, 0.30)
+#benchmarkLDTEdits(18, 0.15, 0.15)
+
+#benchmarkLDTEdits(10, 0.15, 0.50)
+'''
+nodes = [10, 14, 18]
+probs = [0.15, 0.3, 0.5]
+
+for n in nodes:
+	for p1 in probs:
+		for p2 in probs:
+			benchmarkLDTEdits(n, p1, p2)
+'''
+
+# main plot title: different heuristics applied to 100 perturbed LDT-graphs with $n$ vertices. Perturbations were done with $p=(insertion, deletion)$.
+# subplot titles: n = x, p = (a, b)
+'''
+nodes = [10, 14, 18]
+probs = [0.15, 0.30, 0.50]
+
+for n in nodes:
+	for p1 in probs:
+		for p2 in probs:
+			benchmark(n, p1, p2)
+'''
+
+def bar_subplots(n):
+
+
+	S1 = "$G^*$ became a cograph"
+	S2 = "$R_{G^*}$ became consistent"
+	S3 = "$G^*$ remained properly colored"
+	S4 = "$G^*$ became an LDT-graph"
+
+	X_bar = [S1, S2, S3, S4]
+	X_axis = np.arange(len(X_bar))
+	f_size = 16
+
+	a = 3
+	b = 4
+	fig, axs = plt.subplots(a, b, sharex=True, sharey=True)
+	fig.suptitle("Different heuristics applied to 100 perturbed LDT-graphs with $n$ vertices.\nThese perturbations were done with $p=(p_{ins}, p_{del})$")
+
+	for i in range(a):
+		for j in range(b):
+			axs[i, j].bar(X_axis + 0.00, [1, 2, 3, 4], width=0.1)
+			axs[i, j].bar(X_axis + 0.10, [2, 1, 4, 3], width=0.1)
+			axs[i, j].bar(X_axis + 0.20, [4, 3, 1, 2], width=0.1)
+			axs[i, j].bar(X_axis + 0.30, [3, 4, 2, 1], width=0.1)
+			
+	#plt.xticks(X_axis, X_bar, rotation = 30, fontsize=12)
+	fig.xticks(X_axis, X_bar, rotation = 30, fontsize=12)
+	plt.tight_layout()
+	plt.show()
+#bar_subplots(1)
+
+def box_subplots(n, r1, r2, r3):
+	# r1 is a list with ratios for p1, p2, p3, p4, p5.
+	# so it has 5 lists with ratios for each p
+	font_size = 18
+	box_title = r"Ratios between $\frac{C_i}{X_i}$ for LDT editing with different restrictions for triples editing."
+	box_title = box_title + "\nThe graphs these edits are applied to have {} vertices and were obtained by perturbing LDT-graphs with $p=({}, {})$.".format(n, P1, P2)	
+	y_label_box = "Ratio"
+	x_rotation = 0
+	x_ticks = ["LDT editing (i)", "LDT editing (ii)", "LDT editing (iii)"]
+	p_values = [(0.15, 0.15), (0.3, 0.3), (0.5, 0.5), (0.15, 0.5), (0.5, 0.15)]
+	a = 3
+	b = 1
+	fig, axs = plt.subplots(a, b, sharex=True, sharey=True)
+
+	X_axis = np.arange(len(x_ticks))
+	box_data = [ldt1_edit_ratios, ldt2_edit_ratios, ldt3_edit_ratios]
+	plt.title(box_title, fontsize=font_size)
+	plt.ylabel(y_label_box, fontsize=font_size)
+	plt.boxplot(box_data, positions = np.array(range(len(x_ticks)))*2.0, sym='', widths=0.6)
+	plt.xticks(range(0, len(x_ticks) * 2, 2), x_ticks, rotation=x_rotation, fontsize=font_size)
+	plt.tight_layout()
+	fig = plt.gcf()
+	fig.set_size_inches(18.5, 10.5)
+	fig.savefig('graphs/test12.png'.format(n, p1, p2), dpi=100)
+	#plt.show()
+	#clear
+	plt.clf()
+	fig.clear(True)
+	plt.close('all')
+	fig = None
+
+def test1():
+	fig = plt.gcf()
+	ax1 = plt.subplot2grid(shape=(2,6), loc=(0,0), colspan=2)
+	ax2 = plt.subplot2grid((2,6), (0,2), colspan=2)
+	ax3 = plt.subplot2grid((2,6), (0,4), colspan=2)
+	ax4 = plt.subplot2grid((2,6), (1,1), colspan=2)
+	ax5 = plt.subplot2grid((2,6), (1,3), colspan=2)
+	ax1.boxplot([[1, 2, 1, 3, 4, 2, 3, 10, 5], [1, 2, 1, 3, 4, 2, 3, 10, 5], [1, 2, 1, 3, 4, 2, 3, 10, 5], [1, 2, 1, 3, 4, 2, 3, 10, 5]])
+	ax1.set_xticklabels(['test1', 'test2', 'test3', 'test4'])
+	fig.suptitle("test")
+	plt.show()
+
+#test1()
